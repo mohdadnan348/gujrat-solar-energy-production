@@ -1,0 +1,34 @@
+.employee-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9f9f9;
+}
+
+/* Baaki styling AdminLayout.css jaisi hi hai */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s ease;
+}
+
+.main-content.sidebar-open {
+  margin-left: 260px;
+}
+
+.main-content.sidebar-closed {
+  margin-left: 0;
+}
+
+.page-content {
+  flex: 1;
+  padding: 25px;
+  overflow-y: auto;
+}
+
+@media (max-width: 900px) {
+  .main-content.sidebar-open,
+  .main-content.sidebar-closed {
+    margin-left: 0;
+  }
+}

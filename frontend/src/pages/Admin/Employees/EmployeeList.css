@@ -1,0 +1,36 @@
+.employee-page{display:flex;flex-direction:column;gap:20px;animation:fadeIn .4s ease-out}
+.page-header{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.page-header h1{color:#1a202c;font-size:24px;font-weight:800;margin:0 0 5px}
+.page-header p{color:#718096;font-size:14px;margin:0}
+.employee-header-actions{display:flex;gap:10px;align-items:center}
+.toolbar{display:flex;justify-content:space-between;gap:15px;margin-bottom:10px}
+.search-box{position:relative;width:min(350px,100%)}
+.search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#a0aec0}
+.search-box input{box-sizing:border-box;width:100%;padding:12px 15px 12px 45px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;outline:none;transition:.3s}
+.search-box input:focus{border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.1)}
+.filter-actions{width:200px}
+.employee-profile-cell{display:flex;align-items:center;gap:12px}
+.avatar-circle{width:36px;height:36px;flex:0 0 36px;background:linear-gradient(135deg,#1e2a5e,#2a3a7a);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;text-transform:uppercase}
+.font-bold{font-weight:600;color:#2d3748}
+.text-muted{color:#a0aec0}
+.text-sm{font-size:12px}
+.contact-info-cell{display:flex;flex-direction:column;gap:4px;font-size:13px;color:#4a5568}
+.contact-item{display:flex;align-items:center;gap:8px}
+.contact-item .icon{color:#a0aec0;font-size:12px}
+.salary-cell{display:flex;align-items:center;gap:8px;font-weight:600;color:#2d3748;font-size:14px}
+.salary-cell .icon{color:#38a169}
+.status-badge{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;display:inline-block}
+.status-active{background:#f0fff4;color:#38a169}
+.status-inactive{background:#fff5f5;color:#e53e3e}
+.action-buttons{display:flex;gap:8px}
+.icon-btn{border:0;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;padding:8px;border-radius:8px;transition:.2s}
+.icon-btn.edit{color:#38a169;background:#f0fff4}
+.icon-btn.edit:hover{background:#c6f6d5}
+.icon-btn.delete{color:#e53e3e;background:#fff5f5}
+.icon-btn.delete:hover{background:#fed7d7}
+.employee-alert{padding:11px 14px;border-radius:8px;font-size:13px}
+.employee-alert.error{background:#fff5f5;color:#c53030}
+.employee-alert.success{background:#f0fff4;color:#276749}
+.employee-alert button{margin-left:12px;border:0;background:transparent;text-decoration:underline;cursor:pointer;color:inherit}
+.employee-refreshing{font-size:12px;color:#718096}
+@media(max-width:700px){.page-header,.toolbar{align-items:stretch;flex-direction:column}.employee-header-actions{flex-wrap:wrap}.search-box,.filter-actions{width:100%}}

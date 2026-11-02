@@ -1,0 +1,36 @@
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9f9f9;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s ease;
+}
+
+/* Sidebar khula hone par margin */
+.main-content.sidebar-open {
+  margin-left: 260px; /* AdminSidebar ki width */
+}
+
+/* Sidebar band hone par margin */
+.main-content.sidebar-closed {
+  margin-left: 0;
+}
+
+.page-content {
+  flex: 1;
+  padding: 25px;
+  overflow-y: auto;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .main-content.sidebar-open,
+  .main-content.sidebar-closed {
+    margin-left: 0; /* Mobile pe full width */
+  }
+}

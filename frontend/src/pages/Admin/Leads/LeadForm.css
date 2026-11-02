@@ -1,0 +1,129 @@
+.lead-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-loading {
+  padding: 40px;
+  text-align: center;
+  color: #718096;
+  font-size: 14px;
+}
+
+/* Form Section Titles */
+.form-section-title {
+  color: #1e2a5e;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 15px 0 15px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f7fafc;
+}
+.form-section-title:first-of-type {
+  margin-top: 0;
+}
+
+/* Form Rows */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+/* Form Groups */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 15px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.required {
+  color: #e53e3e;
+}
+
+/* Select & Input */
+.form-select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.form-select:focus {
+  border-color: #1e2a5e;
+  box-shadow: 0 0 0 3px rgba(30, 42, 94, 0.1);
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.form-textarea:focus {
+  border-color: #1e2a5e;
+  box-shadow: 0 0 0 3px rgba(30, 42, 94, 0.1);
+}
+
+/* Customer Select with Create Button */
+.customer-select-wrapper {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.customer-select-wrapper .form-select {
+  flex: 1;
+}
+
+.create-customer-btn {
+  padding: 0 20px;
+  background-color: #1e2a5e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.create-customer-btn:hover {
+  background-color: #2a3a7a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(30, 42, 94, 0.2);
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #edf2f7;
+}

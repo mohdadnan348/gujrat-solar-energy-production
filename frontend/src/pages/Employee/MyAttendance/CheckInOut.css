@@ -1,0 +1,14 @@
+.check-inout-actions {
+  display: flex;
+  align-items: center;
+}
+
+.completed-badge {
+  background-color: #f0fff4;
+  color: #38a169;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+  border: 1px solid #c6f6d5;
+}

@@ -1,0 +1,50 @@
+.invoice-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.page-header h1 { color: #1a202c; font-size: 24px; font-weight: 800; margin: 0 0 5px 0; }
+.page-header p { color: #718096; font-size: 14px; margin: 0; }
+
+/* Status Badges */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+}
+.status-draft { background-color: #edf2f7; color: #4a5568; }
+.status-sent { background-color: #ebf8ff; color: #3182ce; }
+.status-partial { background-color: #fefcbf; color: #b7791f; }
+.status-paid { background-color: #f0fff4; color: #38a169; }
+.status-overdue { background-color: #fff5f5; color: #e53e3e; }
+.status-cancelled { background-color: #edf2f7; color: #718096; }
+
+.text-danger { color: #e53e3e; font-weight: 600; }
+.text-success { color: #38a169; font-weight: 600; }
+
+/* Reuse Toolbar & Action Buttons from LeadList */
+.toolbar { display: flex; justify-content: space-between; gap: 15px; margin-bottom: 10px; }
+.search-box { position: relative; width: 350px; }
+.search-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #a0aec0; }
+.search-box input { width: 100%; padding: 12px 15px 12px 45px; border: 1px solid #e2e8f0; border-radius: 10px; background: white; outline: none; transition: 0.3s; }
+.search-box input:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+.filter-actions { width: 200px; }
+
+.action-buttons { display: flex; gap: 8px; }
+.icon-btn {
+  border: none; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+  padding: 8px; border-radius: 8px; transition: 0.2s;
+}
+.icon-btn.view { color: #3182ce; background-color: #ebf8ff; }
+.icon-btn.view:hover { background-color: #bee3f8; }
+.icon-btn.payment { color: #38a169; background-color: #f0fff4; }
+.icon-btn.payment:hover { background-color: #c6f6d5; }

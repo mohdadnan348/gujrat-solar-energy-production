@@ -1,0 +1,57 @@
+.task-update-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-banner {
+  background-color: #f7fafc;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+  margin-bottom: 20px;
+}
+
+.info-banner p {
+  margin: 5px 0;
+  font-size: 13px;
+  color: #4a5568;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 15px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.form-textarea:focus {
+  border-color: #1e2a5e;
+  box-shadow: 0 0 0 3px rgba(30, 42, 94, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #edf2f7;
+}

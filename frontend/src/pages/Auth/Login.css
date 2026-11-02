@@ -1,0 +1,322 @@
+/* =========================================
+   LOGIN PAGE STYLING
+   ========================================= */
+
+.login-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+/* -----------------------------------------
+   LEFT SIDE (Branding & Image)
+   ----------------------------------------- */
+.login-left {
+  width: 50%;
+  position: relative;
+  background-image: url('https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?q=80&w=2072&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 60px;
+  color: white;
+}
+
+/* Image ke upar dark gradient taaki text clear dikhe */
+.login-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(30, 42, 94, 0.95) 0%, rgba(30, 42, 94, 0.8) 100%);
+  z-index: 1;
+}
+
+.login-brand, .login-info, .login-footer-text {
+  position: relative;
+  z-index: 2;
+}
+
+.login-brand h1 {
+  font-size: 32px;
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.login-brand p {
+  margin: 8px 0 0 0;
+  font-size: 16px;
+  color: #f1c40f;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+/* Middle Content */
+.login-info h2 {
+  font-size: 40px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.login-info p {
+  font-size: 18px;
+  line-height: 1.6;
+  max-width: 85%;
+  opacity: 0.9;
+  font-weight: 300;
+  margin-bottom: 40px;
+}
+
+/* Feature List */
+.login-features {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 16px;
+  font-weight: 400;
+  color: #e0e0e0;
+}
+
+.feature-icon {
+  color: #2ecc71;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+/* Footer text at bottom */
+.login-footer-text p {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+/* -----------------------------------------
+   RIGHT SIDE (Form)
+   ----------------------------------------- */
+.login-right {
+  width: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+  position: relative;
+}
+
+.login-form-container {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+  animation: slideUp 0.6s ease-out forwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.form-header {
+  margin-bottom: 35px;
+  text-align: left;
+}
+
+.form-header h2 {
+  color: #1e2a5e;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.form-header p {
+  color: #777;
+  font-size: 15px;
+}
+
+/* Error Message */
+.error-message {
+  background-color: #fef2f2;
+  color: #dc2626;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  border-left: 4px solid #dc2626;
+  font-weight: 500;
+}
+
+/* Input Fields */
+.input-group {
+  margin-bottom: 22px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 15px;
+  color: #999;
+  font-size: 18px;
+  transition: color 0.3s;
+}
+
+.input-icon-wrapper input {
+  width: 100%;
+  padding: 14px 15px 14px 45px;
+  border: 2px solid #eee;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s ease;
+  background-color: #fafafa;
+  color: #333;
+}
+
+.input-icon-wrapper input:focus {
+  border-color: #1e2a5e;
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(30, 42, 94, 0.1);
+}
+
+.input-icon-wrapper input:focus ~ .input-icon {
+  color: #1e2a5e;
+}
+
+/* Password Toggle Eye */
+.password-toggle {
+  position: absolute;
+  right: 15px;
+  cursor: pointer;
+  color: #999;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  transition: color 0.3s;
+}
+
+.password-toggle:hover {
+  color: #1e2a5e;
+}
+
+/* Remember Me & Forgot Password */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  font-size: 14px;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  cursor: pointer;
+}
+
+.remember-me input[type="checkbox"] {
+  accent-color: #1e2a5e;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.forgot-password {
+  color: #1e2a5e;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+.forgot-password:hover {
+  color: #f1c40f;
+}
+
+/* Submit Button */
+.login-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #1e2a5e 0%, #2a3a7a 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(30, 42, 94, 0.3);
+}
+
+.login-btn:hover {
+  background: linear-gradient(135deg, #2a3a7a 0%, #1e2a5e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(30, 42, 94, 0.4);
+}
+
+.login-btn:disabled {
+  background: #999;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Form Footer (Right Side) */
+.form-footer {
+  margin-top: 30px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.form-footer a {
+  color: #1e2a5e;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* -----------------------------------------
+   RESPONSIVE DESIGN (Mobile ke liye)
+   ----------------------------------------- */
+@media (max-width: 900px) {
+  .login-container {
+    flex-direction: column;
+  }
+  .login-left {
+    display: none;
+  }
+  .login-right {
+    width: 100%;
+  }
+  .login-form-container {
+    padding: 20px;
+    box-shadow: none;
+  }
+}

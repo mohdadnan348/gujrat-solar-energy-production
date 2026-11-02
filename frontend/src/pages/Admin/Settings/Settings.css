@@ -1,0 +1,112 @@
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.page-header { display: flex; justify-content: space-between; align-items: center; }
+.page-header h1 { color: #1a202c; font-size: 24px; font-weight: 800; margin: 0 0 5px 0; }
+.page-header p { color: #718096; font-size: 14px; margin: 0; }
+
+/* Settings Layout */
+.settings-container {
+  display: flex;
+  gap: 25px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  border: 1px solid #edf2f7;
+  overflow: hidden;
+  min-height: 500px;
+}
+
+/* Sidebar */
+.settings-sidebar {
+  width: 250px;
+  background-color: #f7fafc;
+  padding: 20px 0;
+  border-right: 1px solid #edf2f7;
+  display: flex;
+  flex-direction: column;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 25px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #718096;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.2s;
+  border-left: 4px solid transparent;
+}
+
+.tab-btn:hover { background-color: #edf2f7; color: #2d3748; }
+.tab-btn.active { background-color: white; color: #1e2a5e; border-left-color: #1e2a5e; }
+
+/* Content */
+.settings-content {
+  flex: 1;
+  padding: 30px;
+}
+
+.settings-section h3 {
+  color: #1e2a5e;
+  font-size: 18px;
+  margin: 0 0 25px 0;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #edf2f7;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.form-textarea:focus {
+  border-color: #1e2a5e;
+  box-shadow: 0 0 0 3px rgba(30, 42, 94, 0.1);
+}
+
+.error-message {
+  background-color: #fef2f2;
+  color: #dc2626;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  border-left: 4px solid #dc2626;
+}

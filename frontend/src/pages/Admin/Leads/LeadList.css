@@ -1,0 +1,175 @@
+.lead-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Page Header --- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.page-header h1 {
+  color: #1a202c;
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 5px 0;
+}
+
+.page-header p {
+  color: #718096;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* --- Toolbar (Search & Filter) --- */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.search-box {
+  position: relative;
+  width: 350px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a0aec0;
+  font-size: 18px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 12px 15px 12px 45px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  background-color: white;
+  outline: none;
+  transition: all 0.3s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.search-box input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.filter-actions {
+  width: 200px;
+}
+
+/* --- Status Badges --- */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+  text-align: center;
+}
+
+.status-new {
+  background-color: #ebf8ff;
+  color: #3182ce;
+}
+.status-contacted {
+  background-color: #fefcbf;
+  color: #b7791f;
+}
+.status-interested {
+  background-color: #faf5ff;
+  color: #805ad5;
+}
+.status-converted {
+  background-color: #f0fff4;
+  color: #38a169;
+}
+.status-lost {
+  background-color: #fff5f5;
+  color: #e53e3e;
+}
+
+/* --- Table Specific --- */
+.lead-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.font-bold { font-weight: 600; color: #2d3748; }
+.text-muted { color: #a0aec0; }
+.text-sm { font-size: 12px; }
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.icon-btn.view { color: #3182ce; background-color: #ebf8ff; }
+.icon-btn.view:hover { background-color: #bee3f8; }
+
+.icon-btn.edit { color: #38a169; background-color: #f0fff4; }
+.icon-btn.edit:hover { background-color: #c6f6d5; }
+
+.icon-btn.delete { color: #e53e3e; background-color: #fff5f5; }
+.icon-btn.delete:hover { background-color: #fed7d7; }
+
+/* Form Rows in Modal */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #edf2f7;
+}
