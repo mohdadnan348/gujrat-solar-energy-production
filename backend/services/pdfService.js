@@ -40,7 +40,12 @@ const launchBrowser = async () => {
 
     // Windows par default Chromium process configuration use karo.
     // --single-process aur --no-zygote intentionally removed hain.
-    args: ["--disable-dev-shm-usage", "--disable-gpu"],
+    args: [
+  "--no-sandbox",
+  "--disable-setuid-sandbox",
+  "--disable-dev-shm-usage",
+  "--disable-gpu"
+],
 
     timeout: 60000,
     protocolTimeout: 120000,
