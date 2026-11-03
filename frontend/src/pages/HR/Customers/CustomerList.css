@@ -1,0 +1,26 @@
+/* Agar pehle se nahi hai toh add karo */
+.customer-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.font-bold { font-weight: 600; color: #2d3748; }
+.text-muted { color: #a0aec0; }
+.text-sm { font-size: 12px; }
+
+/* Baaki purani CSS same rahegi */

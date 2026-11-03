@@ -5,7 +5,11 @@ const catchAsync = require('../utils/catchAsync');
 const employeeFields = '-password';
 
 const getEmployees = catchAsync(async (req, res) => {
-  const employees = await User.find({ role: 'Employee' })
+  const scope = req.user.role === 'Admin' ? {} : { $or: [{ reportingTo: req.user._id }, { createdBy: req.user._id }] };
+  const roleScope = req.user.role === 'Admin'
+    ? { role: { $in: ['HR', 'Employee'] } }
+    : { role: 'Employee' };
+  const employees = await User.find({ ...roleScope, ...scope })
     .select(employeeFields)
     .sort({ createdAt: -1 });
 
@@ -16,6 +20,15 @@ const getEmployees = catchAsync(async (req, res) => {
 
 const createEmployee = catchAsync(async (req, res) => {
   const { name, email, password, mobile, monthlySalary } = req.body;
+  // Admin may create HR or Employee. HR may create Employee only.
+  const requestedRole = String(req.body.role || 'Employee').trim();
+  const allowedRoles = req.user.role === 'Admin' ? ['HR', 'Employee'] : ['Employee'];
+
+  if (!allowedRoles.includes(requestedRole)) {
+    return res.status(403).json(
+      new ApiResponse(403, null, 'You are not allowed to create this account role'),
+    );
+  }
 
   if (!name?.trim() || !email?.trim() || !password || !mobile?.trim()) {
     return res.status(400).json(
@@ -49,7 +62,10 @@ const createEmployee = catchAsync(async (req, res) => {
     password,
     mobile: mobile.trim(),
     monthlySalary: salary,
-    role: 'Employee',
+    role: requestedRole,
+    createdBy: req.user._id,
+    reportingTo: req.user.role === 'HR' ? req.user._id : null,
+    hrManager: req.user.role === 'HR' ? req.user._id : null,
     isActive: true,
   });
 
@@ -60,7 +76,13 @@ const createEmployee = catchAsync(async (req, res) => {
 });
 
 const updateEmployee = catchAsync(async (req, res) => {
-  const employee = await User.findOne({ _id: req.params.id, role: 'Employee' });
+  const scope = req.user.role === 'Admin' ? {} : { $or: [{ reportingTo: req.user._id }, { createdBy: req.user._id }] };
+  const allowedRecordRoles = req.user.role === 'Admin' ? ['HR', 'Employee'] : ['Employee'];
+  const employee = await User.findOne({
+    _id: req.params.id,
+    role: { $in: allowedRecordRoles },
+    ...scope,
+  });
   if (!employee) {
     return res.status(404).json(new ApiResponse(404, null, 'Employee not found'));
   }
@@ -119,7 +141,13 @@ const updateEmployee = catchAsync(async (req, res) => {
 });
 
 const deactivateEmployee = catchAsync(async (req, res) => {
-  const employee = await User.findOne({ _id: req.params.id, role: 'Employee' });
+  const scope = req.user.role === 'Admin' ? {} : { $or: [{ reportingTo: req.user._id }, { createdBy: req.user._id }] };
+  const allowedRecordRoles = req.user.role === 'Admin' ? ['HR', 'Employee'] : ['Employee'];
+  const employee = await User.findOne({
+    _id: req.params.id,
+    role: { $in: allowedRecordRoles },
+    ...scope,
+  });
   if (!employee) {
     return res.status(404).json(new ApiResponse(404, null, 'Employee not found'));
   }

@@ -5,7 +5,7 @@ const { protect } = require('../middlewares/authMiddleware');
 const { authorize } = require('../middlewares/roleMiddleware');
 
 router.use(protect);
-router.use(authorize('Admin')); // Sirf Admin access kar sakta hai
+router.use(authorize('Admin', 'HR')); // Admin manages all; HR manages own employees
 
 router.route('/')
   .get(getEmployees)

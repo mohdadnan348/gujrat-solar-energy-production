@@ -1,33 +1,28 @@
 const express = require('express');
 const router = express.Router();
-const { 
-  createTask, 
-  getTasks, 
-  getTaskById, 
-  updateTaskStatus, 
-  reassignTask, 
-  deleteTask 
+const {
+  createTask, getTasks, getTaskById, updateTask, updateTaskStatus,
+  reassignTask, deleteTask
 } = require('../controllers/taskController');
 const { protect } = require('../middlewares/authMiddleware');
 const { authorize } = require('../middlewares/roleMiddleware');
 
-// All routes require login
 router.use(protect);
 
-// Common Routes (Admin & Employee)
+// Admin and HR can create/assign; Employee can only view own tasks.
 router.route('/')
   .get(getTasks)
-  .post(authorize('Admin'), createTask); // Only Admin can create
+  .post(authorize('Admin', 'HR'), createTask);
 
 router.route('/:id')
   .get(getTaskById)
-  .delete(authorize('Admin'), deleteTask); // Only Admin can delete
+  .put(authorize('Admin', 'HR'), updateTask)
+  .delete(authorize('Admin', 'HR'), deleteTask);
 
 router.route('/:id/status')
-  .put(updateTaskStatus); // Both can update (Controller checks ownership)
+  .put(updateTaskStatus);
 
-// Admin Only Routes
 router.route('/:id/reassign')
-  .put(authorize('Admin'), reassignTask);
+  .put(authorize('Admin', 'HR'), reassignTask);
 
 module.exports = router;

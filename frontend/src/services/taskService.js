@@ -2,7 +2,7 @@ import API from './api';
 
 const taskService = {
   getAll: async (filters = '') => {
-    const response = await API.get(`/tasks?${filters}`);
+    const response = await API.get(`/tasks${filters ? `?${filters}` : ''}`);
     return response.data.data;
   },
   getById: async (id) => {
@@ -11,6 +11,10 @@ const taskService = {
   },
   create: async (data) => {
     const response = await API.post('/tasks', data);
+    return response.data.data;
+  },
+  update: async (id, data) => {
+    const response = await API.put(`/tasks/${id}`, data);
     return response.data.data;
   },
   updateStatus: async (id, status, comment) => {
@@ -24,7 +28,7 @@ const taskService = {
   delete: async (id) => {
     const response = await API.delete(`/tasks/${id}`);
     return response.data.data;
-  },
+  }
 };
 
 export default taskService;

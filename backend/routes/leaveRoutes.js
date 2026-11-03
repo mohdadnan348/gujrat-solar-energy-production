@@ -13,12 +13,12 @@ const { authorize } = require('../middlewares/roleMiddleware');
 
 router.use(protect);
 
-// Employee-only endpoints
+// Employees submit and view their own leave applications.
 router.post('/', authorize('Employee'), applyLeave);
 router.get('/my', authorize('Employee'), getMyLeaves);
 
-// Admin-only endpoints
-router.get('/', authorize('Admin'), getAllLeaves);
-router.put('/:id/status', authorize('Admin'), updateLeaveStatus);
+// Admin has global access; HR is restricted to their own team's leave requests in the controller.
+router.get('/', authorize('Admin', 'HR'), getAllLeaves);
+router.put('/:id/status', authorize('Admin', 'HR'), updateLeaveStatus);
 
 module.exports = router;

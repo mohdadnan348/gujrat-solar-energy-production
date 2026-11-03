@@ -1,14 +1,29 @@
 import API from './api';
 
-const dashboardService = {
-  getAdminStats: async () => {
-    const response = await API.get('/dashboard/stats');
-    const payload = response?.data;
+const unwrap = (response) => {
+  let payload = response?.data;
+  while (payload && !Array.isArray(payload) &&
+    Object.prototype.hasOwnProperty.call(payload, 'data')) {
+    payload = payload.data;
+  }
+  return payload;
+};
 
-    // Supports the project's ApiResponse shape: { statusCode, data, success }.
-    const stats = payload?.data ?? payload;
+const dashboardService = {
+  // HR must call /dashboard/hr-stats, never the Admin-only /dashboard/stats endpoint.
+  getHRStats: async () => {
+    const stats = unwrap(await API.get('/dashboard/hr-stats'));
     if (!stats || typeof stats !== 'object' || Array.isArray(stats)) {
-      throw new Error('Dashboard API returned an invalid response.');
+      throw new Error('HR dashboard API returned an invalid response.');
+    }
+    return stats;
+  },
+
+  // Admin-only global dashboard.
+  getAdminStats: async () => {
+    const stats = unwrap(await API.get('/dashboard/stats'));
+    if (!stats || typeof stats !== 'object' || Array.isArray(stats)) {
+      throw new Error('Admin dashboard API returned an invalid response.');
     }
     return stats;
   },
@@ -20,12 +35,11 @@ const dashboardService = {
       API.get('/attendance/my'),
       API.get('/payroll/my'),
     ]);
-
     return {
-      tasks: tasksRes?.data?.data || [],
-      leads: leadsRes?.data?.data || [],
-      attendance: attendanceRes?.data?.data || [],
-      payroll: payrollRes?.data?.data || [],
+      tasks: unwrap(tasksRes) || [],
+      leads: unwrap(leadsRes) || [],
+      attendance: unwrap(attendanceRes) || [],
+      payroll: unwrap(payrollRes) || [],
     };
   },
 };

@@ -1,5 +1,4 @@
-
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
 const {
@@ -9,35 +8,29 @@ const {
   updateInvoice,
   updateInvoiceStatus,
   recordPayment,
-  downloadInvoicePDF
-} = require('../controllers/invoiceController');
+  downloadInvoicePDF,
+} = require("../controllers/invoiceController");
 
-const { protect } = require('../middlewares/authMiddleware');
-const { authorize } = require('../middlewares/roleMiddleware');
+const { protect } = require("../middlewares/authMiddleware");
+const { authorize } = require("../middlewares/roleMiddleware");
 
-// Authentication and Admin Authorization
 router.use(protect);
-router.use(authorize('Admin'));
 
-// Create Invoice / Get All Invoices
-router.route('/')
-  .post(createInvoice)
-  .get(getInvoices);
+// Admin and HR can view invoices. HR data is scoped to Customer.ownerHR
+// inside the controller.
+router.get("/", authorize("Admin", "HR"), getInvoices);
+router.get("/:id", authorize("Admin", "HR"), getInvoiceById);
 
-// Download Invoice PDF
-router.get('/:id/pdf', downloadInvoicePDF);
+// Invoice creation, editing and PDF download remain Admin-only.
+router.post("/", authorize("Admin", "HR"), createInvoice);
+router.put("/:id", authorize("Admin", "HR"), updateInvoice);
+router.get("/:id/pdf", authorize("Admin", "HR"), downloadInvoicePDF);
 
-// Get Single Invoice / Update Invoice
-router.route('/:id')
-  .get(getInvoiceById)
-  .put(updateInvoice);
+// Admin can set Sent/Cancelled; HR can set Sent only for their own team.
+router.put("/:id/status", authorize("Admin", "HR"), updateInvoiceStatus);
 
-// Update Invoice Status
-router.route('/:id/status')
-  .put(updateInvoiceStatus);
-
-// Record Invoice Payment
-router.route('/:id/payments')
-  .post(recordPayment);
+// Existing payment endpoint is not part of this status-only UI change.
+// If retained by the project, it is Admin-only (never HR).
+router.post("/:id/payments", authorize("Admin"), recordPayment);
 
 module.exports = router;

@@ -21,6 +21,9 @@ import EditQuotation from "./pages/Admin/Quotations/EditQuotation";
 import InvoiceList from "./pages/Admin/Invoices/InvoiceList";
 import CreateInvoice from "./pages/Admin/Invoices/CreateInvoice";
 import InvoiceView from "./pages/Admin/Invoices/InvoiceView";
+import HRInvoiceList from "./pages/HR/Invoices/InvoiceList";
+import HRCreateInvoice from "./pages/HR/Invoices/CreateInvoice";
+import HRInvoiceView from "./pages/HR/Invoices/InvoiceView";
 import TaskList from "./pages/Admin/Tasks/TaskList";
 import EmployeeList from "./pages/Admin/Employees/EmployeeList";
 import AllAttendance from "./pages/Admin/Attendance/AllAttendance";
@@ -45,6 +48,8 @@ import Notifications from "./pages/Admin/Notifications/Notifications";
 // ================= LAYOUTS =================
 import AdminLayout from "./components/Layout/AdminLayout";
 import EmployeeLayout from "./components/Layout/EmployeeLayout";
+import HRLayout from "./components/Layout/HRLayout";
+import HRDashboard from "./pages/HR/Dashboard/HRDashboard";
 
 import "./App.css";
 
@@ -77,6 +82,28 @@ function App() {
           <Route path="/admin/reports" element={<AdminLayout><Reports /></AdminLayout>} />
           <Route path="/admin/settings" element={<AdminLayout><Settings /></AdminLayout>} />
           <Route path="/admin/notifications" element={<AdminLayout><Notifications /></AdminLayout>} />
+
+          {/* ================= HR ROUTES ================= */}
+          <Route path="/hr/dashboard" element={<HRLayout><HRDashboard /></HRLayout>} />
+          <Route path="/hr/employees" element={<HRLayout><EmployeeList /></HRLayout>} />
+          <Route path="/hr/customers" element={<HRLayout><CustomerList /></HRLayout>} />
+          <Route path="/hr/leads" element={<HRLayout><LeadList /></HRLayout>} />
+          <Route path="/hr/leads/:id" element={<HRLayout><LeadDetails /></HRLayout>} />
+          <Route path="/hr/quotations" element={<HRLayout><QuotationList /></HRLayout>} />
+          <Route path="/hr/quotations/create" element={<HRLayout><CreateQuotation /></HRLayout>} />
+          <Route path="/hr/quotations/:id" element={<HRLayout><QuotationView /></HRLayout>} />
+          <Route path="/hr/quotations/edit/:id" element={<HRLayout><EditQuotation /></HRLayout>} />
+          <Route path="/hr/invoices" element={<HRLayout><HRInvoiceList /></HRLayout>} />
+          <Route path="/hr/invoices/create" element={<HRLayout><HRCreateInvoice /></HRLayout>} />
+          <Route path="/hr/invoices/:id" element={<HRLayout><HRInvoiceView /></HRLayout>} />
+          <Route path="/hr/tasks" element={<HRLayout><TaskList /></HRLayout>} />
+          <Route path="/hr/attendance" element={<HRLayout><AllAttendance /></HRLayout>} />
+          <Route path="/hr/payroll" element={<HRLayout><PayrollList /></HRLayout>} />
+          <Route path="/hr/payroll/generate" element={<HRLayout><GeneratePayroll /></HRLayout>} />
+          <Route path="/hr/leaves" element={<HRLayout><LeaveList /></HRLayout>} />
+          <Route path="/hr/notifications" element={<HRLayout><Notifications /></HRLayout>} />
+          <Route path="/hr/settings" element={<HRLayout><Settings /></HRLayout>} />
+          <Route path="/hr/reports" element={<HRLayout><Reports /></HRLayout>} />
 
           {/* ================= EMPLOYEE ROUTES ================= */}
           <Route path="/employee/dashboard" element={<EmployeeLayout><EmployeeDashboard /></EmployeeLayout>} />

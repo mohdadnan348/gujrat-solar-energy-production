@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FiMenu, FiBell, FiUser, FiLogOut, FiChevronDown } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import notificationService from '../../services/notificationService';
 import './Navbar.css';
@@ -9,12 +9,18 @@ const Navbar = ({ toggleSidebar, userRole }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
 
   const displayName =
     user?.name || user?.fullName || user?.employeeName ||
     user?.username || user?.email || 'User';
   const role = user?.role || userRole || 'Employee';
+  const routeLabel = (() => {
+    const segment = location.pathname.split('/').filter(Boolean)[1] || 'dashboard';
+    const labels = { dashboard: 'Dashboard', leads: 'Leads', customers: 'Customers', quotations: 'Quotations', invoices: 'Invoices', tasks: 'Tasks', employees: 'Employees', attendance: 'Attendance', payroll: 'Payroll', leaves: 'Leaves', notifications: 'Notifications', reports: 'Reports', settings: 'Settings' };
+    return labels[segment] || 'Dashboard';
+  })();
 
   useEffect(() => {
     let mounted = true;
@@ -43,7 +49,7 @@ const Navbar = ({ toggleSidebar, userRole }) => {
   };
 
   const handleNotificationClick = () => {
-    navigate(role === 'Admin' ? '/admin/notifications' : '/employee/notifications');
+    navigate(role === 'Admin' ? '/admin/notifications' : role === 'HR' ? '/hr/notifications' : '/employee/notifications');
   };
 
   return (
@@ -53,7 +59,7 @@ const Navbar = ({ toggleSidebar, userRole }) => {
           <FiMenu />
         </button>
         <h2 className="page-title">
-          {role === 'Admin' ? 'Admin Dashboard' : 'Employee Dashboard'}
+          {role === 'Admin' ? 'Admin' : role === 'HR' ? 'HR' : 'Employee'} {routeLabel}
         </h2>
       </div>
 

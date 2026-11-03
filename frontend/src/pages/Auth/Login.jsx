@@ -23,11 +23,11 @@ const Login = () => {
       const data = await login(email, password); // <-- API Call
       
       // Role ke hisaab se redirect
-      if (data.data.role === 'Admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/employee/dashboard');
-      }
+      const loggedInUser = data?.data?.user || data?.data?.data?.user || data?.data?.data || data?.data || data;
+      const role = loggedInUser?.role;
+      if (role === 'Admin') navigate('/admin/dashboard');
+      else if (role === 'HR') navigate('/hr/dashboard');
+      else navigate('/employee/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
     } finally {

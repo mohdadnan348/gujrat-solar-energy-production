@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   FiUsers, FiFileText, FiDollarSign, FiTarget,
-  FiPlus, FiRefreshCw, FiActivity,
+  FiPlus, FiRefreshCw, FiActivity, FiUserCheck,
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import dashboardService from '../../../services/dashboardService';
@@ -53,6 +53,7 @@ const AdminDashboard = () => {
 
   const leadsChange = stats?.monthly?.leads?.changePercent;
   const quotationsChange = stats?.monthly?.quotations?.changePercent;
+  const teamTotal = Number(stats?.totalTeamMembers ?? stats?.totalEmployees ?? 0);
 
   const statCards = [
     {
@@ -72,17 +73,17 @@ const AdminDashboard = () => {
       link: '/admin/quotations',
     },
     {
-      title: 'Total Revenue',
-      value: formatCurrency(stats?.totalRevenue),
-      subtitle: 'Paid invoices · All time',
+      title: 'Sent Invoice Revenue',
+      value: formatCurrency(stats?.totalSentRevenue ?? stats?.totalRevenue),
+      subtitle: 'Sent invoices · All time',
       icon: <FiDollarSign />,
       color: 'green',
       link: '/admin/invoices',
     },
     {
-      title: 'Total Employees',
-      value: Number(stats?.totalEmployees || 0).toLocaleString('en-IN'),
-      subtitle: 'Active employees',
+      title: 'Total Team Members',
+      value: teamTotal.toLocaleString('en-IN'),
+      subtitle: `${Number(stats?.totalHR || 0)} HR · ${Number(stats?.totalEmployees || 0)} Employees`,
       icon: <FiUsers />,
       color: 'red',
       link: '/admin/employees',
@@ -93,8 +94,9 @@ const AdminDashboard = () => {
     <div className="admin-dashboard">
       <div className="dashboard-header">
         <div>
+          <span className="dashboard-eyebrow">GUJRAT SOLAR · ADMIN PANEL</span>
           <h1>Dashboard Overview</h1>
-          <p>Live business summary from your database.</p>
+          <p>Your business performance and team activity at a glance.</p>
         </div>
         <div className="dashboard-header-actions">
           <div className="date-badge">
@@ -125,7 +127,7 @@ const AdminDashboard = () => {
         {statCards.map((stat) => (
           <button
             type="button"
-            className="stat-card"
+            className={`stat-card stat-card-${stat.color}`}
             key={stat.title}
             onClick={() => navigate(stat.link)}
           >
@@ -133,9 +135,7 @@ const AdminDashboard = () => {
             <div className="stat-details">
               <p className="stat-title">{stat.title}</p>
               <h3 className="stat-value">{stat.value}</h3>
-              <div className="stat-change">
-                <span>{stat.subtitle}</span>
-              </div>
+              <div className="stat-change"><span>{stat.subtitle}</span></div>
             </div>
           </button>
         ))}
@@ -149,7 +149,6 @@ const AdminDashboard = () => {
               View Leads
             </button>
           </div>
-
           <div className="activity-list">
             {stats?.recentActivities?.length ? (
               stats.recentActivities.map((activity) => (
@@ -187,11 +186,11 @@ const AdminDashboard = () => {
                 <small>Add a new client to database</small>
               </div>
             </button>
-            <button className="action-btn secondary" onClick={() => navigate('/admin/leads')}>
-              <div className="action-icon"><FiPlus /></div>
+            <button className="action-btn secondary" onClick={() => navigate('/admin/employees')}>
+              <div className="action-icon"><FiUserCheck /></div>
               <div className="action-text">
-                <span>Add New Lead</span>
-                <small>Track a potential customer</small>
+                <span>Manage Team</span>
+                <small>View HR accounts and employees</small>
               </div>
             </button>
           </div>

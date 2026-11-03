@@ -1,0 +1,7 @@
+.employee-form{display:flex;flex-direction:column;gap:4px}
+.form-section-title{color:#1e2a5e;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:15px 0;padding-bottom:8px;border-bottom:2px solid #f7fafc}
+.form-section-title:first-child{margin-top:0}
+.form-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.form-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:20px;padding-top:20px;border-top:1px solid #edf2f7}
+.employee-form-error{margin:12px 0 0;color:#c53030;font-size:13px}
+@media(max-width:640px){.form-row{grid-template-columns:1fr}.form-actions{flex-wrap:wrap}}

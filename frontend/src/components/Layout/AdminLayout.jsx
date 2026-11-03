@@ -1,10 +1,18 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import AdminSidebar from './AdminSidebar';
 import Navbar from './Navbar';
 import './AdminLayout.css';
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'HR') return <Navigate to="/hr/dashboard" replace />;
+  if (user.role !== 'Admin') return <Navigate to="/employee/dashboard" replace />;
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

@@ -78,6 +78,7 @@ const createQuotation = catchAsync(async (req, res) => {
     date: date || Date.now(),
     expiryDate,
     createdBy: req.user._id,
+    ownerHR: req.user.role === 'HR' ? req.user._id : null,
     mainItem,
     subTotal,
     gstAmount,
@@ -102,7 +103,7 @@ const getQuotations = catchAsync(async (req, res) => {
     return res.status(403).json(new ApiResponse(403, null, 'Not authorized to view quotations'));
   }
 
-  const quotations = await Quotation.find()
+  const quotations = await Quotation.find(req.user.role === 'HR' ? { $or: [{ ownerHR: req.user._id }, { createdBy: req.user._id }] } : {})
     .populate('customer', 'name mobile')
     .populate('createdBy', 'name')
     .sort({ createdAt: -1 });

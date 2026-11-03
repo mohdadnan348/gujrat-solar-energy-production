@@ -30,7 +30,9 @@ const getAdminStats = catchAsync(async (req, res) => {
   const [
     totalLeads,
     totalQuotations,
+    totalTeamMembers,
     totalEmployees,
+    totalHR,
     revenueRows,
     currentMonthLeads,
     previousMonthLeads,
@@ -39,13 +41,19 @@ const getAdminStats = catchAsync(async (req, res) => {
     recentLeads,
     recentQuotations,
     recentInvoices,
-    recentEmployees,
+    recentTeamMembers,
   ] = await Promise.all([
     Lead.countDocuments(),
     Quotation.countDocuments(),
+
+    // Admin dashboard team total includes both HR and Employee accounts.
+    User.countDocuments({ role: { $in: ['HR', 'Employee'] }, isActive: true }),
     User.countDocuments({ role: 'Employee', isActive: true }),
+    User.countDocuments({ role: 'HR', isActive: true }),
+
+    // Revenue card is based on the full value of invoices marked Sent.
     Invoice.aggregate([
-      { $match: { status: 'Paid' } },
+      { $match: { status: 'Sent' } },
       { $group: { _id: null, total: { $sum: { $ifNull: ['$grandTotal', 0] } } } },
     ]),
     Lead.countDocuments({ createdAt: { $gte: thisMonthStart } }),
@@ -58,33 +66,30 @@ const getAdminStats = catchAsync(async (req, res) => {
       .populate('customer', 'name').populate('createdBy', 'name'),
     Invoice.find().sort({ createdAt: -1 }).limit(5)
       .populate('customer', 'name').populate('createdBy', 'name'),
-    User.find({ role: 'Employee' }).sort({ createdAt: -1 }).limit(5)
-      .select('name createdAt'),
+    User.find({ role: { $in: ['HR', 'Employee'] } }).sort({ createdAt: -1 }).limit(5)
+      .select('name role createdAt'),
   ]);
 
   const activities = [
     ...recentLeads.map((lead) => formatActivity(
-      lead,
-      'lead',
+      lead, 'lead',
       `Lead created for ${lead.customer?.name || 'Unknown customer'}`,
       lead.assignedTo?.name || 'System',
     )),
     ...recentQuotations.map((quotation) => formatActivity(
-      quotation,
-      'quotation',
+      quotation, 'quotation',
       `Quotation ${quotation.estimateNo || ''} created for ${quotation.customer?.name || 'Unknown customer'}`.trim(),
       quotation.createdBy?.name || 'System',
     )),
     ...recentInvoices.map((invoice) => formatActivity(
-      invoice,
-      'invoice',
+      invoice, 'invoice',
       `Invoice ${invoice.invoiceNo || ''} created for ${invoice.customer?.name || 'Unknown customer'}`.trim(),
       invoice.createdBy?.name || 'System',
     )),
-    ...recentEmployees.map((employee) => formatActivity(
-      employee,
-      'employee',
-      `Employee ${employee.name} added`,
+    ...recentTeamMembers.map((member) => formatActivity(
+      member,
+      member.role === 'HR' ? 'employee' : 'employee',
+      `${member.role === 'HR' ? 'HR account' : 'Employee'} ${member.name} added`,
       'Admin',
     )),
   ]
@@ -103,7 +108,12 @@ const getAdminStats = catchAsync(async (req, res) => {
   const stats = {
     totalLeads,
     totalQuotations,
+    totalTeamMembers,
     totalEmployees,
+    totalHR,
+    // Sent invoice value (not collected/paid revenue).
+    totalSentRevenue: Number(revenueRows[0]?.total || 0),
+    // Backward-compatible alias for older dashboard consumers.
     totalRevenue: Number(revenueRows[0]?.total || 0),
     monthly: {
       leads: {
@@ -126,4 +136,36 @@ const getAdminStats = catchAsync(async (req, res) => {
   );
 });
 
-module.exports = { getAdminStats };
+const Task = require('../models/Task');
+const Customer = require('../models/Customer');
+const Attendance = require('../models/Attendance');
+const Leave = require('../models/Leave');
+
+const getHRStats = catchAsync(async (req, res) => {
+  const ownerHR = req.user._id;
+  const [totalEmployees, totalLeads, totalCustomers, totalTasks, pendingTasks,
+    pendingLeaves, attendanceToday, recentLeads] = await Promise.all([
+    User.countDocuments({ role: 'Employee', $or: [{ reportingTo: ownerHR }, { createdBy: ownerHR }] }),
+    Lead.countDocuments({ ownerHR }),
+    Customer.countDocuments({ ownerHR }),
+    Task.countDocuments({ ownerHR }),
+    Task.countDocuments({ ownerHR, status: { $ne: 'Completed' } }),
+    Leave.countDocuments({ ownerHR, status: 'Pending' }),
+    Attendance.countDocuments({
+      ownerHR,
+      date: {
+        $gte: new Date(new Date().setHours(0, 0, 0, 0)),
+        $lt: new Date(new Date().setHours(24, 0, 0, 0)),
+      },
+    }),
+    Lead.find({ ownerHR }).sort({ createdAt: -1 }).limit(5)
+      .populate('customer', 'name mobile').populate('assignedTo', 'name'),
+  ]);
+
+  return res.status(200).json(new ApiResponse(200, {
+    totalEmployees, totalLeads, totalCustomers, totalTasks, pendingTasks,
+    pendingLeaves, attendanceToday, recentLeads, generatedAt: new Date().toISOString(),
+  }, 'HR dashboard stats fetched successfully'));
+});
+
+module.exports = { getAdminStats, getHRStats };

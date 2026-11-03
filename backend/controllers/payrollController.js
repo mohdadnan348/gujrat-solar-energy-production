@@ -12,8 +12,9 @@ const generatePayroll = catchAsync(async (req, res) => {
   const { employeeId, month, year } = req.body;
 
   // 1. Get Employee Details
-  const employee = await User.findById(employeeId);
-  if (!employee || employee.role !== 'Employee') {
+  const employee = await User.findOne({ _id: employeeId, role: 'Employee', ...(req.user.role === 'HR' ? { $or: [{ reportingTo: req.user._id }, { createdBy: req.user._id }] } : {}) });
+  if (!employee || employee.role !== 'Employee' ||
+      (req.user.role === 'HR' && String(employee.reportingTo || employee.createdBy) !== String(req.user._id))) {
     return res.status(404).json(new ApiResponse(404, null, 'Employee not found'));
   }
 
@@ -52,6 +53,7 @@ const generatePayroll = catchAsync(async (req, res) => {
   // 5. Naya Payroll record banao (Draft)
   const payroll = await Payroll.create({
     employee: employeeId,
+    ownerHR: req.user.role === 'HR' ? req.user._id : (employee.hrManager || employee.reportingTo || null),
     month,
     year,
     ...calculation,
@@ -66,7 +68,7 @@ const generatePayroll = catchAsync(async (req, res) => {
 // @access  Private (Admin only)
 const getAllPayrolls = catchAsync(async (req, res) => {
   const { month, year, status } = req.query;
-  let query = {};
+  let query = req.user.role === 'Admin' ? {} : { ownerHR: req.user._id };
 
   if (month && year) {
     query.month = month;
@@ -99,7 +101,7 @@ const getMyPayrolls = catchAsync(async (req, res) => {
 // @route   PUT /api/payroll/:id/finalize
 // @access  Private (Admin only)
 const finalizePayroll = catchAsync(async (req, res) => {
-  const payroll = await Payroll.findById(req.params.id);
+  const payroll = await Payroll.findOne({ _id: req.params.id, ...(req.user.role === 'HR' ? { ownerHR: req.user._id } : {}) });
 
   if (!payroll) {
     return res.status(404).json(new ApiResponse(404, null, 'Payroll record not found'));

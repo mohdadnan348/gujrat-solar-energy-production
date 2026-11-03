@@ -1,0 +1,2 @@
+/* HR layout reuses the existing Admin layout geometry. */
+.hr-layout { min-height: 100vh; }
