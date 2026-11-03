@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminSidebar from './AdminSidebar';
@@ -6,22 +6,41 @@ import Navbar from './Navbar';
 import './AdminLayout.css';
 
 const AdminLayout = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, loading } = useAuth();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setSidebarOpen(window.innerWidth > 900);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'HR') return <Navigate to="/hr/dashboard" replace />;
   if (user.role !== 'Admin') return <Navigate to="/employee/dashboard" replace />;
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
+  const toggleSidebar = () => setSidebarOpen(prev => !prev);
+  const closeSidebar = () => {
+    if (window.innerWidth <= 900) setSidebarOpen(false);
   };
 
   return (
     <div className="admin-layout">
-      <AdminSidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-      
+      {sidebarOpen && (
+        <div className="sidebar-overlay" onClick={closeSidebar} />
+      )}
+
+      <AdminSidebar
+        isOpen={sidebarOpen}
+        toggleSidebar={closeSidebar}
+      />
+
       <div className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
         <Navbar toggleSidebar={toggleSidebar} userRole="Admin" />
         <main className="page-content">
