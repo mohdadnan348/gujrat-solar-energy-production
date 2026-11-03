@@ -1,0 +1,391 @@
+/*
+ * Global responsive layer for Gujrat Solar CRM.
+ * Loaded after the existing component styles so it can safely adapt all pages.
+ */
+
+:root {
+  --mobile-page-gutter: clamp(12px, 3vw, 24px);
+}
+
+html {
+  width: 100%;
+  min-width: 320px;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+body, #root {
+  width: 100%;
+  min-height: 100%;
+  min-width: 320px;
+  overflow-x: clip;
+}
+
+img, video, canvas, svg {
+  max-width: 100%;
+}
+
+input, select, textarea, button {
+  max-width: 100%;
+  font: inherit;
+}
+
+input, select, textarea {
+  min-width: 0;
+}
+
+table {
+  max-width: 100%;
+}
+
+.page-content,
+.main-content,
+.admin-layout,
+.employee-layout,
+.hr-layout {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.page-content {
+  width: 100%;
+  padding: clamp(14px, 2vw, 25px);
+  overflow-x: auto;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .main-content,
+  .main-content.sidebar-open,
+  .main-content.sidebar-closed {
+    width: 100%;
+    min-width: 0;
+    margin-left: 0 !important;
+  }
+
+  .admin-sidebar,
+  .employee-sidebar {
+    width: min(290px, 86vw);
+    max-width: 86vw;
+    height: 100dvh;
+    transform: translateX(-105%);
+    z-index: 1200;
+    transition: transform .25s ease;
+  }
+
+  .admin-sidebar.open,
+  .employee-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    background: rgba(10, 18, 42, .48);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+  }
+
+  .navbar {
+    width: 100%;
+    min-height: 62px;
+    height: auto;
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  .navbar-left {
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .menu-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .page-title {
+    min-width: 0;
+    font-size: clamp(16px, 3vw, 20px);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .navbar-right {
+    flex: 0 0 auto;
+    gap: 10px;
+  }
+
+  .user-profile {
+    padding: 3px;
+    gap: 5px;
+  }
+
+  .user-info {
+    display: none !important;
+  }
+
+  .dropdown-icon {
+    display: none;
+  }
+
+  .page-content {
+    padding: var(--mobile-page-gutter);
+    overflow-x: auto;
+  }
+
+  /* Common page headings and action/filter rows */
+  h1 {
+    font-size: clamp(22px, 5vw, 30px);
+    line-height: 1.2;
+  }
+
+  h2 {
+    font-size: clamp(19px, 4vw, 25px);
+  }
+
+  .page-header,
+  .page-heading,
+  .header-section,
+  .section-header,
+  .toolbar,
+  .filter-bar,
+  .search-filter-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* Responsive card and dashboard grids */
+  .emp-stats-grid,
+  .emp-dashboard-grid,
+  .stats-grid,
+  .dashboard-grid,
+  .cards-grid,
+  .card-grid,
+  .summary-grid,
+  .grid-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .welcome-banner {
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 22px !important;
+  }
+
+  .welcome-content {
+    min-width: 0;
+  }
+
+  .emp-stat-card,
+  .emp-card,
+  .stat-card,
+  .dashboard-card {
+    min-width: 0;
+  }
+
+  /* Forms should never overflow the viewport */
+  form,
+  .form-container,
+  .form-card,
+  .modal-content,
+  .content-card {
+    max-width: 100%;
+  }
+
+  .form-grid,
+  .form-row,
+  .form-fields,
+  .input-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .form-group,
+  .form-field {
+    min-width: 0;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-height: 42px;
+  }
+
+  textarea {
+    min-height: 90px;
+  }
+
+  /* Wide tables remain readable and scroll inside their wrapper */
+  .table-container,
+  .table-responsive,
+  .table-wrapper,
+  .data-table-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 620px;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    white-space: nowrap;
+  }
+
+  /* Modal sizing */
+  .modal,
+  .modal-overlay {
+    padding: 12px !important;
+  }
+
+  .modal-content {
+    width: min(100%, 620px) !important;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+  }
+
+  /* Prevent action buttons from pushing content off-screen */
+  button,
+  .btn,
+  .action-btn {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .page-content {
+    padding: 12px;
+  }
+
+  .navbar {
+    min-height: 58px;
+    padding: 8px 10px;
+  }
+
+  .page-title {
+    font-size: 15px;
+  }
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .nav-icon-btn {
+    padding: 5px;
+  }
+
+  .emp-stats-grid,
+  .emp-dashboard-grid,
+  .stats-grid,
+  .dashboard-grid,
+  .cards-grid,
+  .card-grid,
+  .summary-grid,
+  .grid-container,
+  .form-grid,
+  .form-row,
+  .form-fields,
+  .input-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .welcome-banner {
+    padding: 18px !important;
+    border-radius: 14px;
+  }
+
+  .welcome-banner h1 {
+    font-size: 22px;
+  }
+
+  .welcome-banner p {
+    font-size: 13px;
+  }
+
+  .welcome-date {
+    align-self: flex-start;
+  }
+
+  .emp-stat-card {
+    padding: 14px !important;
+  }
+
+  .emp-card {
+    padding: 16px !important;
+  }
+
+  .emp-card-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .page-header button,
+  .page-heading button,
+  .toolbar button,
+  .filter-bar button {
+    width: 100%;
+  }
+
+  .search-input,
+  .search-box {
+    width: 100% !important;
+    max-width: 100%;
+  }
+
+  .filter-bar select,
+  .filter-bar input,
+  .search-filter-row select {
+    width: 100% !important;
+  }
+
+  .form-actions,
+  .modal-actions,
+  .button-group {
+    flex-wrap: wrap;
+  }
+
+  .form-actions button,
+  .modal-actions button,
+  .button-group button {
+    flex: 1 1 100%;
+  }
+
+  .sidebar-brand {
+    padding: 20px 16px;
+  }
+
+  .sidebar-footer {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  .navbar-right {
+    gap: 5px;
+  }
+
+  .page-title {
+    font-size: 14px;
+  }
+
+  .page-content {
+    padding: 10px;
+  }
+}
