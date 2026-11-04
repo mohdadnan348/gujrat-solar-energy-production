@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,6 +9,7 @@ import { AuthProvider } from "./context/AuthContext";
 
 // ================= AUTH PAGES =================
 import Login from "./pages/Auth/Login";
+import Welcome from "./pages/Auth/Welcome";
 
 // ================= ADMIN PAGES =================
 import AdminDashboard from "./pages/Admin/Dashboard/AdminDashboard";
@@ -58,8 +60,9 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          {/* Auth */}
-          <Route path="/" element={<Navigate to="/login" />} />
+
+          {/* ================= PUBLIC ROUTES ================= */}
+          <Route path="/" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
 
           {/* ================= ADMIN ROUTES ================= */}
@@ -82,6 +85,7 @@ function App() {
           <Route path="/admin/reports" element={<AdminLayout><Reports /></AdminLayout>} />
           <Route path="/admin/settings" element={<AdminLayout><Settings /></AdminLayout>} />
           <Route path="/admin/notifications" element={<AdminLayout><Notifications /></AdminLayout>} />
+          <Route path="/admin/leaves" element={<AdminLayout><LeaveList /></AdminLayout>} />
 
           {/* ================= HR ROUTES ================= */}
           <Route path="/hr/dashboard" element={<HRLayout><HRDashboard /></HRLayout>} />
@@ -112,10 +116,11 @@ function App() {
           <Route path="/employee/tasks" element={<EmployeeLayout><MyTasks /></EmployeeLayout>} />
           <Route path="/employee/attendance" element={<EmployeeLayout><MyAttendance /></EmployeeLayout>} />
           <Route path="/employee/leaves" element={<EmployeeLayout><MyLeaves /></EmployeeLayout>} />
-          {/* Admin - Leave Management */}
-          <Route path="/admin/leaves" element={<AdminLayout><LeaveList /></AdminLayout>} />
           <Route path="/employee/salary" element={<EmployeeLayout><MySalary /></EmployeeLayout>} />
           <Route path="/employee/profile" element={<EmployeeLayout><Profile /></EmployeeLayout>} />
+
+          {/* ================= FALLBACK ROUTE ================= */}
+          <Route path="*" element={<Navigate to="/" replace />} />
 
         </Routes>
       </Router>
