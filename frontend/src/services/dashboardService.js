@@ -2,7 +2,6 @@ import API from './api';
 
 const unwrap = (response) => {
   let payload = response?.data;
-<<<<<<< HEAD
 
   while (
     payload &&
@@ -33,36 +32,12 @@ const dashboardService = {
 
     if (!stats || typeof stats !== 'object' || Array.isArray(stats)) {
       throw new Error('HR dashboard API returned an invalid response.');
-=======
-  while (payload && !Array.isArray(payload) &&
-    Object.prototype.hasOwnProperty.call(payload, 'data')) {
-    payload = payload.data;
-  }
-  return payload;
-};
-
-const dashboardService = {
-  // HR must call /dashboard/hr-stats, never the Admin-only /dashboard/stats endpoint.
-  getHRStats: async () => {
-    const stats = unwrap(await API.get('/dashboard/hr-stats'));
-    if (!stats || typeof stats !== 'object' || Array.isArray(stats)) {
-      throw new Error('HR dashboard API returned an invalid response.');
-    }
-    return stats;
-  },
-
-  // Admin-only global dashboard.
-  getAdminStats: async () => {
-    const stats = unwrap(await API.get('/dashboard/stats'));
-    if (!stats || typeof stats !== 'object' || Array.isArray(stats)) {
-      throw new Error('Admin dashboard API returned an invalid response.');
->>>>>>> b1916d9 (create hr role)
     }
 
     return stats;
   },
 
-  // Admin dashboard: global Admin-only endpoint.
+  // Admin dashboard: Admin-only global endpoint.
   getAdminStats: async () => {
     const stats = unwrap(await API.get('/dashboard/stats'));
 
@@ -73,16 +48,15 @@ const dashboardService = {
     return stats;
   },
 
-  // Employee dashboard: fetch the employee's assigned tasks without
-  // filtering by "To Do", so In Progress and other open tasks are included.
+  // Employee dashboard data.
   getEmployeeDashboardData: async () => {
-    const [tasksRes, leadsRes, attendanceRes, payrollRes] = await Promise.all([
-      API.get('/tasks'),
-      API.get('/leads'),
-      API.get('/attendance/my'),
-      API.get('/payroll/my'),
-    ]);
-<<<<<<< HEAD
+    const [tasksRes, leadsRes, attendanceRes, payrollRes] =
+      await Promise.all([
+        API.get('/tasks'),
+        API.get('/leads'),
+        API.get('/attendance/my'),
+        API.get('/payroll/my'),
+      ]);
 
     const tasksPayload = unwrap(tasksRes);
     const leadsPayload = unwrap(leadsRes);
@@ -91,22 +65,25 @@ const dashboardService = {
 
     const tasks = toArray(tasksPayload, ['tasks', 'results', 'items']);
     const leads = toArray(leadsPayload, ['leads', 'results', 'items']);
-    const attendance = toArray(attendancePayload, ['attendance', 'records', 'results', 'items']);
-    const payroll = toArray(payrollPayload, ['payroll', 'records', 'results', 'items']);
+    const attendance = toArray(attendancePayload, [
+      'attendance',
+      'records',
+      'results',
+      'items',
+    ]);
+    const payroll = toArray(payrollPayload, [
+      'payroll',
+      'records',
+      'results',
+      'items',
+    ]);
 
     return {
-      // Completed tasks are excluded from the dashboard's open-task widgets.
+      // Completed tasks are excluded from open-task widgets.
       tasks: tasks.filter((task) => task?.status !== 'Completed'),
       leads,
       attendance,
       payroll,
-=======
-    return {
-      tasks: unwrap(tasksRes) || [],
-      leads: unwrap(leadsRes) || [],
-      attendance: unwrap(attendanceRes) || [],
-      payroll: unwrap(payrollRes) || [],
->>>>>>> b1916d9 (create hr role)
     };
   },
 };

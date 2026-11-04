@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { useState, useEffect } from 'react';
-=======
-import { useState } from 'react';
->>>>>>> b1916d9 (create hr role)
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import HRSidebar from './HRSidebar';
@@ -10,7 +6,6 @@ import Navbar from './Navbar';
 import './HRLayout.css';
 
 export default function HRLayout({ children }) {
-<<<<<<< HEAD
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, loading } = useAuth();
 
@@ -25,21 +20,21 @@ export default function HRLayout({ children }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-=======
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { user, loading } = useAuth();
-
->>>>>>> b1916d9 (create hr role)
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role === 'Admin') return <Navigate to="/admin/dashboard" replace />;
-  if (user.role !== 'HR') return <Navigate to="/employee/dashboard" replace />;
-<<<<<<< HEAD
+  if (user.role === 'Admin') {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  if (user.role !== 'HR') {
+    return <Navigate to="/employee/dashboard" replace />;
+  }
 
-  const toggleSidebar = () => setSidebarOpen(prev => !prev);
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
   const closeSidebar = () => {
-    if (window.innerWidth <= 900) setSidebarOpen(false);
+    if (window.innerWidth <= 900) {
+      setSidebarOpen(false);
+    }
   };
 
   return (
@@ -53,8 +48,13 @@ export default function HRLayout({ children }) {
         toggleSidebar={closeSidebar}
       />
 
-      <div className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+      <div
+        className={`main-content ${
+          sidebarOpen ? 'sidebar-open' : 'sidebar-closed'
+        }`}
+      >
         <Navbar toggleSidebar={toggleSidebar} userRole="HR" />
+
         <main className="page-content">
           {children}
         </main>
@@ -62,15 +62,3 @@ export default function HRLayout({ children }) {
     </div>
   );
 }
-=======
-  return (
-    <div className="admin-layout hr-layout">
-      <HRSidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(v => !v)} />
-      <div className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-        <Navbar toggleSidebar={() => setSidebarOpen(v => !v)} userRole="HR" />
-        <main className="page-content">{children}</main>
-      </div>
-    </div>
-  );
-}
->>>>>>> b1916d9 (create hr role)

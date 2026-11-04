@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { useState, useEffect } from 'react';
-=======
-import { useState } from 'react';
->>>>>>> b1916d9 (create hr role)
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminSidebar from './AdminSidebar';
@@ -10,18 +6,8 @@ import Navbar from './Navbar';
 import './AdminLayout.css';
 
 const AdminLayout = ({ children }) => {
-<<<<<<< HEAD
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, loading } = useAuth();
-=======
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { user, loading } = useAuth();
-
-  if (loading) return null;
-  if (!user) return <Navigate to="/login" replace />;
-  if (user.role === 'HR') return <Navigate to="/hr/dashboard" replace />;
-  if (user.role !== 'Admin') return <Navigate to="/employee/dashboard" replace />;
->>>>>>> b1916d9 (create hr role)
 
   useEffect(() => {
     const handleResize = () => {
@@ -37,11 +23,16 @@ const AdminLayout = ({ children }) => {
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'HR') return <Navigate to="/hr/dashboard" replace />;
-  if (user.role !== 'Admin') return <Navigate to="/employee/dashboard" replace />;
+  if (user.role !== 'Admin') {
+    return <Navigate to="/employee/dashboard" replace />;
+  }
 
-  const toggleSidebar = () => setSidebarOpen(prev => !prev);
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+
   const closeSidebar = () => {
-    if (window.innerWidth <= 900) setSidebarOpen(false);
+    if (window.innerWidth <= 900) {
+      setSidebarOpen(false);
+    }
   };
 
   return (
@@ -55,8 +46,13 @@ const AdminLayout = ({ children }) => {
         toggleSidebar={closeSidebar}
       />
 
-      <div className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+      <div
+        className={`main-content ${
+          sidebarOpen ? 'sidebar-open' : 'sidebar-closed'
+        }`}
+      >
         <Navbar toggleSidebar={toggleSidebar} userRole="Admin" />
+
         <main className="page-content">
           {children}
         </main>

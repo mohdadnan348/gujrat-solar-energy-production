@@ -58,9 +58,23 @@ const CreateQuotation = () => {
   });
 
   // BOM State (Ab har item ka apna GST hai)
+  // Default solar BOM from the supplied material sheet. Item description and brand are editable.
   const [bomItems, setBomItems] = useState([
-    { srNo: '1', itemDescription: 'Solar Panels (PV Modules)', qty: 1, unit: 'Set', rate: 0, gstRate: 5, gstAmount: 0, total: 0, brand: '' },
-    { srNo: '2', itemDescription: 'Solar String Inverter', qty: 1, unit: 'Nos', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: '' },
+  { srNo: '1', itemDescription: 'Solar Panels (PV Modules)', qty: 1, unit: 'Set', rate: 0, gstRate: 5, gstAmount: 0, total: 0, brand: 'Adani/Waaree/TATA/Sanora/Satvik/ORB/Loom' },
+  { srNo: '2', itemDescription: 'Solar String Inverter', qty: 1, unit: 'Nos', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Qbits/Waaree/TATA/Sanora/Havells/Polycab/Envergy' },
+  { srNo: '3', itemDescription: 'Solar 80 micron HDGI Structure* - 80 x 40 mm x 3 mm For Leg, Rafters; 40 x 40 mm x 3 mm For purlins', qty: 1, unit: 'Set', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Appolo/TATA/JSW' },
+  { srNo: '4.1', itemDescription: 'ACDB (IP65) - With SPD, Fuse & MCB; DCDB (IP65) - With SPD, Fuse & MCB', qty: 1, unit: 'Nos', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Polycab/Schneider/Sibass/L&T/ELMEX' },
+  { srNo: '5.1', itemDescription: '4 SQ MM DC Solar Copper Cable, XLS-R, UV RESISTANT, 1100V Grade, Double Insulated', qty: 30, unit: 'Mtr', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Polycab/RR/Finolex/Apar/Jenflex/HPL' },
+  { srNo: '5.2', itemDescription: '4 SQ MM or 6 SQ MM AC Wire, XLS-R', qty: 30, unit: 'Mtr', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Polycab/RR/Finolex/Apar/HPL' },
+  { srNo: '5.3', itemDescription: '4 SQ MM Copper Earthing wire for AC & DC', qty: 30, unit: 'Mtr', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Polycab/RR/Finolex/Apar/HPL' },
+  { srNo: '5.4', itemDescription: '16 SQ MM Aluminium Wire For LA', qty: 30, unit: 'Mtr', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Polycab/RR/Finolex/Apar/HPL' },
+  { srNo: '5.5', itemDescription: 'UPVC Conduit Pipe for wiring', qty: 1, unit: 'Mtr', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Polycab/RR/Finolex/Apar/HPL' },
+  { srNo: '6.1', itemDescription: '200 Micron Copper Coated 1 Meter Earthing Rod for AC / DC & LA', qty: 3, unit: 'Set', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Standard' },
+  { srNo: '6.2', itemDescription: '1 Meter copper LA with 3 spike & insulator', qty: 1, unit: 'Set', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Standard' },
+  { srNo: '7.1', itemDescription: 'Wifi Stick : Data Loger for Online Monitoring', qty: 1, unit: 'Nos', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'As per inverter' },
+  { srNo: '8.1', itemDescription: 'Cable tie, SS304 300mm (100Pcs/Pkt)', qty: 1, unit: 'Set', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'SS304/PVC' },
+  { srNo: '8.2', itemDescription: 'Ferules & Cable Tags', qty: 1, unit: 'Set', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Standard' },
+  { srNo: '8.3', itemDescription: 'Lugs Ring Type As per wiring requirements', qty: 1, unit: 'Set', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Copper/Aluminium' }
   ]);
 
   // Summary
