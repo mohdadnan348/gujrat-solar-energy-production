@@ -42,11 +42,11 @@ const launchBrowser = async () => {
     // Windows par default Chromium process configuration use karo.
     // --single-process aur --no-zygote intentionally removed hain.
     args: [
-  "--no-sandbox",
-  "--disable-setuid-sandbox",
-  "--disable-dev-shm-usage",
-  "--disable-gpu"
-],
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+    ],
 
     timeout: 60000,
     protocolTimeout: 120000,
@@ -69,8 +69,12 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     // Existing project image assets
     console.log("🖼️ Loading quotation images...");
     const coverImage = await getBase64Image("/images/cover-worker.jpg");
-    const panelImagePath = getPanelImagePath(quotationData.panelCount || quotationData.numberOfPanels);
-    const panelCountImage = panelImagePath ? await getBase64Image(panelImagePath) : "";
+    const panelImagePath = getPanelImagePath(
+      quotationData.panelCount || quotationData.numberOfPanels,
+    );
+    const panelCountImage = panelImagePath
+      ? await getBase64Image(panelImagePath)
+      : "";
     const logoImage = await getBase64Image("/images/logo.png");
     const installationImage = await getBase64Image(
       "/images/installation-team.jpg",
@@ -169,37 +173,45 @@ const generateQuotationPDF = async (quotationData, customerData) => {
 
     // Consolidated quotation line on Page 4.
     const mainItem = quotationData.mainItem || {};
-    const mainItemDescription = mainItem.description || "Residential Solar Rooftop On-grid Plant";
+    const mainItemDescription =
+      mainItem.description || "Residential Solar Rooftop On-grid Plant";
 
     // If the Pricing Details brand fields are blank, use the matching BOM brand.
     const panelBomItem = bom.find((item) =>
-      /(solar\s*panel|pv\s*module|photovoltaic)/i.test(String(item.itemDescription || ""))
+      /(solar\s*panel|pv\s*module|photovoltaic)/i.test(
+        String(item.itemDescription || ""),
+      ),
     );
     const inverterBomItem = bom.find((item) =>
-      /inverter/i.test(String(item.itemDescription || ""))
+      /inverter/i.test(String(item.itemDescription || "")),
     );
-    const mainItemPanelDetails = mainItem.panelDetails || panelBomItem?.brand || "";
-    const mainItemInverterDetails = mainItem.inverterDetails || inverterBomItem?.brand || "";
+    const mainItemPanelDetails =
+      mainItem.panelDetails || panelBomItem?.brand || "";
+    const mainItemInverterDetails =
+      mainItem.inverterDetails || inverterBomItem?.brand || "";
 
     const enteredQty = String(mainItem.qty || "").trim();
-    const mainItemQty = !enteredQty || /^custom$/i.test(enteredQty)
-      ? String(quotationData.plantCapacity || "Custom")
-      : enteredQty;
+    const mainItemQty =
+      !enteredQty || /^custom$/i.test(enteredQty)
+        ? String(quotationData.plantCapacity || "Custom")
+        : enteredQty;
     const mainItemQtyNumber = Number.parseFloat(mainItemQty);
     const mainItemDiscount = Math.max(0, Number(mainItem.discount || 0));
 
     // Page 4 row must reconcile with the saved quotation summary:
     // Qty x Rate - Discount = Sub Total; Amount with Tax = Grand Total.
     // Prefer the entered rate only when it agrees with the saved subtotal.
-    const derivedRate = Number.isFinite(mainItemQtyNumber) && mainItemQtyNumber > 0
-      ? (subTotal + mainItemDiscount) / mainItemQtyNumber
-      : subTotal + mainItemDiscount;
+    const derivedRate =
+      Number.isFinite(mainItemQtyNumber) && mainItemQtyNumber > 0
+        ? (subTotal + mainItemDiscount) / mainItemQtyNumber
+        : subTotal + mainItemDiscount;
     const enteredRate = Number(mainItem.rate || 0);
-    const enteredLineTotal = Number.isFinite(mainItemQtyNumber) && mainItemQtyNumber > 0
-      ? (mainItemQtyNumber * enteredRate) - mainItemDiscount
-      : enteredRate - mainItemDiscount;
-    const enteredRateMatchesSummary = enteredRate > 0 &&
-      Math.abs(enteredLineTotal - subTotal) < 0.01;
+    const enteredLineTotal =
+      Number.isFinite(mainItemQtyNumber) && mainItemQtyNumber > 0
+        ? mainItemQtyNumber * enteredRate - mainItemDiscount
+        : enteredRate - mainItemDiscount;
+    const enteredRateMatchesSummary =
+      enteredRate > 0 && Math.abs(enteredLineTotal - subTotal) < 0.01;
     const mainItemRate = enteredRateMatchesSummary ? enteredRate : derivedRate;
     const mainItemTotal = subTotal;
     const mainItemAmountWithTax = grandTotal;
@@ -218,15 +230,30 @@ const generateQuotationPDF = async (quotationData, customerData) => {
       subsidyText
         ? `<div class="main-item-subsidy">${escapeHtml(subsidyText)}</div>`
         : "",
-    ].filter(Boolean).join("");
+    ]
+      .filter(Boolean)
+      .join("");
     const panelCount = (() => {
-      const explicitCount = Number(quotationData.panelCount || quotationData.numberOfPanels || 0);
-      if (Number.isFinite(explicitCount) && explicitCount > 0) return Math.floor(explicitCount);
+      const explicitCount = Number(
+        quotationData.panelCount || quotationData.numberOfPanels || 0,
+      );
+      if (Number.isFinite(explicitCount) && explicitCount > 0)
+        return Math.floor(explicitCount);
       return bom.reduce((total, item) => {
-        const description = String(item.itemDescription || item.description || "").toLowerCase();
-        const isSolarPanel = /(solar\\s*panel|pv\\s*module|photovoltaic|\\bpanel\\b)/i.test(description);
+        const description = String(
+          item.itemDescription || item.description || "",
+        ).toLowerCase();
+        const isSolarPanel =
+          /(solar\\s*panel|pv\\s*module|photovoltaic|\\bpanel\\b)/i.test(
+            description,
+          );
         const qty = Number(item.qty || 0);
-        return total + (isSolarPanel && Number.isFinite(qty) && qty > 0 ? Math.floor(qty) : 0);
+        return (
+          total +
+          (isSolarPanel && Number.isFinite(qty) && qty > 0
+            ? Math.floor(qty)
+            : 0)
+        );
       }, 0);
     })();
 
@@ -237,11 +264,26 @@ const generateQuotationPDF = async (quotationData, customerData) => {
 
       const roofAreas = {
         // Front-facing view: broad central roof plane, below the skyline and behind the front parapet.
-        front: [[105, 205], [865, 205], [970, 315], [35, 315]],
+        front: [
+          [105, 205],
+          [865, 205],
+          [970, 315],
+          [35, 315],
+        ],
         // Side perspective: keep the array on the visible roof surface, clear of the tank and stair block.
-        side: [[185, 215], [985, 245], [985, 420], [305, 345]],
+        side: [
+          [185, 215],
+          [985, 245],
+          [985, 420],
+          [305, 345],
+        ],
         // Aerial view: central roof field, clear of tank/utility block and perimeter parapets.
-        aerial: [[285, 90], [875, 90], [875, 445], [285, 445]],
+        aerial: [
+          [285, 90],
+          [875, 90],
+          [875, 445],
+          [285, 445],
+        ],
       };
 
       const corners = roofAreas[view];
@@ -249,8 +291,14 @@ const generateQuotationPDF = async (quotationData, customerData) => {
       const point = (u, v) => {
         const [tl, tr, br, bl] = corners;
         return [
-          (1-u)*(1-v)*tl[0] + u*(1-v)*tr[0] + u*v*br[0] + (1-u)*v*bl[0],
-          (1-u)*(1-v)*tl[1] + u*(1-v)*tr[1] + u*v*br[1] + (1-u)*v*bl[1],
+          (1 - u) * (1 - v) * tl[0] +
+            u * (1 - v) * tr[0] +
+            u * v * br[0] +
+            (1 - u) * v * bl[0],
+          (1 - u) * (1 - v) * tl[1] +
+            u * (1 - v) * tr[1] +
+            u * v * br[1] +
+            (1 - u) * v * bl[1],
         ];
       };
 
@@ -272,10 +320,14 @@ const generateQuotationPDF = async (quotationData, customerData) => {
           const v1 = (row + 1) / rows - gapV / 2;
 
           const cornersPx = [
-            point(u0, v0), point(u1, v0),
-            point(u1, v1), point(u0, v1),
+            point(u0, v0),
+            point(u1, v0),
+            point(u1, v1),
+            point(u0, v1),
           ];
-          const pts = cornersPx.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
+          const pts = cornersPx
+            .map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`)
+            .join(" ");
           const clipId = `moduleClip-${view}-${i}`;
 
           tiles += `<defs><clipPath id="${clipId}"><polygon points="${pts}"/></clipPath></defs>`;
@@ -287,15 +339,17 @@ const generateQuotationPDF = async (quotationData, customerData) => {
           // This avoids the oversized cross-lines that made the previous panels look like tiles.
           tiles += `<g clip-path="url(#${clipId})" opacity="0.48">`;
           for (let c = 1; c < 6; c++) {
-            const u = u0 + (u1-u0) * c / 6;
-            const a = point(u, v0), b = point(u, v1);
+            const u = u0 + ((u1 - u0) * c) / 6;
+            const a = point(u, v0),
+              b = point(u, v1);
             tiles += `<line x1="${a[0].toFixed(2)}" y1="${a[1].toFixed(2)}"
               x2="${b[0].toFixed(2)}" y2="${b[1].toFixed(2)}"
               stroke="#a9c5d8" stroke-width="0.65"/>`;
           }
           for (let r = 1; r < 10; r++) {
-            const v = v0 + (v1-v0) * r / 10;
-            const a = point(u0, v), b = point(u1, v);
+            const v = v0 + ((v1 - v0) * r) / 10;
+            const a = point(u0, v),
+              b = point(u1, v);
             tiles += `<line x1="${a[0].toFixed(2)}" y1="${a[1].toFixed(2)}"
               x2="${b[0].toFixed(2)}" y2="${b[1].toFixed(2)}"
               stroke="#a9c5d8" stroke-width="0.55"/>`;
@@ -347,7 +401,9 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     }
 
     const formatContactAddress = (value) =>
-      escapeHtml(value).replace(/,\\s*/g, ",<br>").replace(/\\r?\\n/g, "<br>");
+      escapeHtml(value)
+        .replace(/,\\s*/g, ",<br>")
+        .replace(/\\r?\\n/g, "<br>");
 
     const imageTag = (src, className = "", alt = "") =>
       src
