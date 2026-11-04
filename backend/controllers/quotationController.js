@@ -2,7 +2,7 @@ const Quotation = require('../models/Quotation');
 const Customer = require('../models/Customer');
 const ApiResponse = require('../utils/apiResponse');
 const catchAsync = require('../utils/catchAsync');
-const { generateRoofImage } = require('../services/imageService');
+const { getPanelImagePath } = require('../services/panelImageService');
 const { generateQuotationPDF } = require('../services/pdfService');
 const amountInWords = require('../services/numberToWords');
 
@@ -51,11 +51,10 @@ const createQuotation = catchAsync(async (req, res) => {
   const estimateNo = await generateEstimateNo();
   const calculatedAmountInWords = amountInWords(grandTotal); 
 
-  let roofImageUrl = '';
-  if (panelCount && panelCount > 0) {
-    console.log("🎨 Generating roof image for", panelCount, "panels...");
-    roofImageUrl = await generateRoofImage('roof-top-base.jpg', panelCount);
-    console.log("✅ Roof image generated:", roofImageUrl);
+  // Use the pre-downloaded image for the exact panel count. Never generate an image.
+  const roofImageUrl = getPanelImagePath(panelCount);
+  if (!roofImageUrl) {
+    console.warn(`No pre-downloaded roof image available for ${panelCount} panels.`);
   }
 
   const formattedBom = (bom || []).map(item => ({
@@ -140,8 +139,12 @@ const updateQuotation = catchAsync(async (req, res) => {
     return res.status(400).json(new ApiResponse(400, null, `Cannot edit a quotation with status: ${quotation.status}`));
   }
 
-  if (req.body.panelCount && req.body.panelCount !== quotation.panelCount) {
-    req.body.roofImageUrl = await generateRoofImage('roof-top-base.jpg', req.body.panelCount);
+  if (req.body.panelCount !== undefined) {
+    // Refresh the selected static artwork when the panel count changes.
+    req.body.roofImageUrl = getPanelImagePath(req.body.panelCount);
+    if (!req.body.roofImageUrl) {
+      console.warn(`No pre-downloaded roof image available for ${req.body.panelCount} panels.`);
+    }
   }
 
   if (req.body.grandTotal) {

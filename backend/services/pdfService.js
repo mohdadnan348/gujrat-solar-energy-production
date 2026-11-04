@@ -4,6 +4,7 @@ const fs = require("fs");
 const sharp = require("sharp");
 const amountInWords = require("./numberToWords");
 const Settings = require("../models/Settings");
+const { getPanelImagePath } = require("./panelImageService");
 
 // Helper: Image ko resize + compress karke Base64 me convert karo
 const getBase64Image = async (filePath) => {
@@ -68,11 +69,9 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     // Existing project image assets
     console.log("🖼️ Loading quotation images...");
     const coverImage = await getBase64Image("/images/cover-worker.jpg");
-    const productRoofImage = await getBase64Image("/images/roof-product-composite.jpg");
+    const panelImagePath = getPanelImagePath(quotationData.panelCount || quotationData.numberOfPanels);
+    const panelCountImage = panelImagePath ? await getBase64Image(panelImagePath) : "";
     const logoImage = await getBase64Image("/images/logo.png");
-    const roofImage = quotationData.roofImageUrl
-      ? await getBase64Image(quotationData.roofImageUrl)
-      : "";
     const installationImage = await getBase64Image(
       "/images/installation-team.jpg",
     );
@@ -490,6 +489,23 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     height: 100%;
     object-fit: fill;
   }
+  .product-composite > img.panel-count-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .panel-count-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 3mm;
+    text-align: center;
+    color: #142b46;
+    font-size: 12px;
+    font-weight: 700;
+    background: rgba(255,255,255,0.88);
+    padding: 2mm;
+  }
   .panel-count-badge {
     position: absolute;
     display: inline-flex;
@@ -747,19 +763,8 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     <div class="company-meta">${escapeHtml(companyName)}<br>${escapeHtml(gstin)}</div>
   </div>
   <div class="product-composite">
-    ${imageTag(productRoofImage, "", "Three-angle rooftop solar installation preview")}
-    <div class="panel-count-badge panel-count-badge--main">
-      <strong>${panelCount}</strong>
-      <span>${panelCount === 1 ? "SOLAR PANEL" : "SOLAR PANELS"}</span>
-    </div>
-    <div class="panel-count-badge panel-count-badge--left">
-      <strong>${panelCount}</strong>
-      <span>${panelCount === 1 ? "SOLAR PANEL" : "SOLAR PANELS"}</span>
-    </div>
-    <div class="panel-count-badge panel-count-badge--right">
-      <strong>${panelCount}</strong>
-      <span>${panelCount === 1 ? "SOLAR PANEL" : "SOLAR PANELS"}</span>
-    </div>
+    ${imageTag(panelCountImage, "panel-count-image", `${panelCount} solar panels rooftop layout`)}
+    <div class="panel-count-caption">${panelCount} Solar Panels – Rooftop Layout</div>
   </div>
   <div class="footer"><span>${escapeHtml(companyName)}</span><span>3/9</span><span class="social-icons" aria-label="Social and contact links">
         <span class="social-icon facebook" title="Facebook">f</span>
