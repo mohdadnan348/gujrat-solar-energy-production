@@ -100,8 +100,33 @@ const InvoiceView = () => {
     }
   };
 
+  const handleDownloadMaterialListPdf = async () => {
+    if (downloading) return;
+    setError('');
+    setDownloading(true);
+    try {
+      const binaryData = await invoiceService.downloadMaterialListPdf(id);
+      const pdfBlob = binaryData instanceof Blob ? binaryData : new Blob([binaryData], { type: 'application/pdf' });
+      if (pdfBlob.size < 5) throw new Error('Server did not return a valid PDF file.');
+      const header = new Uint8Array(await pdfBlob.slice(0, 5).arrayBuffer());
+      if (String.fromCharCode(...header) !== '%PDF-') throw new Error('Downloaded file is not a valid PDF.');
+      const url = window.URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      const safeInvoiceNo = String(invoice?.invoiceNo || 'invoice').replace(/[^a-z0-9_-]/gi, '-');
+      link.href = url;
+      link.download = `${safeInvoiceNo}-material-list.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      setError(err.message || 'Unable to download full material list PDF.');
+    } finally { setDownloading(false); }
+  };
+
   if (error && !invoice) {
-    return (
+
+  return (
       <div className="invoice-view-page">
         <p className="text-danger">{error}</p>
         <button
@@ -140,6 +165,9 @@ const InvoiceView = () => {
             disabled={downloading}
           >
             {downloading ? 'Preparing PDF...' : 'Download PDF'}
+          </Button>
+          <Button variant="secondary" onClick={handleDownloadMaterialListPdf} disabled={downloading}>
+            {downloading ? 'Preparing...' : 'Download Full Material List'}
           </Button>
         </div>
       </div>

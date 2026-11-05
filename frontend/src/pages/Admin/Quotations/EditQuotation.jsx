@@ -44,11 +44,13 @@ const EditQuotation = () => {
     panelCount: 0,
     expiryDate: '',
     mainItem: { ...initialMainItem },
+    materialTotalAmount: 0,
+    materialGstRate: 5,
     subTotal: 0,
     gstAmount: 0,
     grandTotal: 0,
     subsidyAmount: '',
-    termsAndConditions: ''
+    termsAndConditions: { generalTerms: '', governmentSubsidy: '', warrantyDetails: '', panelWarranty: '', inverterWarranty: '', batteryWarranty: '', bosWarranty: '', maintenanceWarranty: '', warrantyNotes: '', siteCompletionSchedule: '', paymentTerms: '', warrantyExclusions: '', scopeOfWork: '' }
   });
 
   const [bomItems, setBomItems] = useState([]);
@@ -91,12 +93,14 @@ const EditQuotation = () => {
             ...(data.mainItem || {})
           },
 
+          materialTotalAmount: Number(data.materialTotalAmount ?? data.subTotal) || 0,
+          materialGstRate: Number(data.materialGstRate ?? 5),
           subTotal: Number(data.subTotal) || 0,
           gstAmount: Number(data.gstAmount) || 0,
           grandTotal: Number(data.grandTotal) || 0,
 
           subsidyAmount: data.subsidyAmount || '',
-          termsAndConditions: data.termsAndConditions || ''
+          termsAndConditions: { generalTerms: '', governmentSubsidy: '', warrantyDetails: '', panelWarranty: '', inverterWarranty: '', batteryWarranty: '', bosWarranty: '', maintenanceWarranty: '', warrantyNotes: '', siteCompletionSchedule: '', paymentTerms: '', warrantyExclusions: '', scopeOfWork: '', ...(data.termsAndConditions || {}) }
         });
 
         setBomItems(
@@ -229,28 +233,11 @@ const EditQuotation = () => {
   // =====================================
 
   const totals = useMemo(() => {
-    const subTotal = bomItems.reduce((sum, item) => {
-      return sum + (
-        (Number(item.qty) || 0) *
-        (Number(item.rate) || 0)
-      );
-    }, 0);
+    const subTotal = Number(formData.materialTotalAmount) || 0;
+    const gstAmount = Number((subTotal * (Number(formData.materialGstRate) || 0) / 100).toFixed(2));
+    return { subTotal, gstAmount, grandTotal: Number((subTotal + gstAmount).toFixed(2)) };
+  }, [formData.materialTotalAmount, formData.materialGstRate]);
 
-    const gstAmount = bomItems.reduce((sum, item) => {
-      const baseAmount =
-        (Number(item.qty) || 0) * (Number(item.rate) || 0);
-      const itemGst =
-        baseAmount * (Number(item.gstRate) || 0) / 100;
-
-      return sum + Number(itemGst.toFixed(2));
-    }, 0);
-
-    return {
-      subTotal: Number(subTotal.toFixed(2)),
-      gstAmount: Number(gstAmount.toFixed(2)),
-      grandTotal: Number((subTotal + gstAmount).toFixed(2))
-    };
-  }, [bomItems]);
 
   // =====================================
   // 5. UPDATE REAL QUOTATION API
@@ -284,6 +271,8 @@ const EditQuotation = () => {
             Number(formData.mainItem.totalAmountWithTax) || 0
         },
 
+        materialTotalAmount: totals.subTotal,
+        materialGstRate: Number(formData.materialGstRate),
         subTotal: totals.subTotal,
         gstAmount: totals.gstAmount,
         grandTotal: totals.grandTotal,
@@ -292,23 +281,7 @@ const EditQuotation = () => {
 
         termsAndConditions: formData.termsAndConditions,
 
-        bom: bomItems.map((item, index) => ({
-          srNo: item.srNo || String(index + 1),
-          itemDescription: item.itemDescription,
-          qty: Number(item.qty) || 0,
-          unit: item.unit,
-          brand: item.brand,
-          rate: Number(item.rate) || 0,
-          gstRate: Number(item.gstRate) || 0,
-          gstAmount: Number(
-            ((((Number(item.qty) || 0) * (Number(item.rate) || 0)) *
-              (Number(item.gstRate) || 0)) / 100).toFixed(2)
-          ),
-          total: Number(
-            (((Number(item.qty) || 0) * (Number(item.rate) || 0)) *
-              (1 + (Number(item.gstRate) || 0) / 100)).toFixed(2)
-          )
-        }))
+        bom: bomItems.map((item, index) => ({ srNo: item.srNo || String(index + 1), itemDescription: item.itemDescription, qty: Number(item.qty) || 0, unit: item.unit, brand: item.brand, rate: 0, gstRate: 0, gstAmount: 0, total: 0 }))
       };
 
       await quotationService.update(id, payload);
@@ -424,6 +397,8 @@ const EditQuotation = () => {
           <h3 className="section-title">
             1. Customer & System Details
           </h3>
+          <div style={{ marginBottom: 14 }}>
+          </div>
 
           <div className="form-grid">
 
@@ -485,315 +460,25 @@ const EditQuotation = () => {
           </div>
         </div>
 
-        {/* SECTION 2: PRICING DETAILS */}
-
+        {/* SECTION 2: COMBINED MATERIAL PRICING */}
         <div className="form-card">
-
-          <h3 className="section-title">
-            2. Pricing Details
-          </h3>
-
-          <div className="form-grid">
-
-            <Input
-              label="Description"
-              name="description"
-              value={formData.mainItem.description}
-              onChange={handleMainItemChange}
-              disabled={!isEditable}
-            />
-
-            <Input
-              label="Panel Brand"
-              name="panelDetails"
-              value={formData.mainItem.panelDetails}
-              onChange={handleMainItemChange}
-              disabled={!isEditable}
-            />
-
-            <Input
-              label="Inverter Brand"
-              name="inverterDetails"
-              value={formData.mainItem.inverterDetails}
-              onChange={handleMainItemChange}
-              disabled={!isEditable}
-            />
-
-            <Input
-              label="Quantity"
-              name="qty"
-              value={formData.mainItem.qty}
-              onChange={handleMainItemChange}
-              disabled={!isEditable}
-            />
-
-            <Input
-              label="Rate (₹)"
-              name="rate"
-              type="number"
-              value={formData.mainItem.rate}
-              onChange={handleMainItemChange}
-              disabled={!isEditable}
-            />
-
-            <Input
-              label="Discount (₹)"
-              name="discount"
-              type="number"
-              value={formData.mainItem.discount}
-              onChange={handleMainItemChange}
-              disabled={!isEditable}
-            />
-
+          <h3 className="section-title">2. Combined Material Pricing</h3>
+          <div className="form-grid" style={{ alignItems: 'end' }}>
+            <Input label="Total Material Amount (₹) — All Materials Combined" type="number" value={formData.materialTotalAmount} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, materialTotalAmount: e.target.value }))} />
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>GST Rate<select value={formData.materialGstRate} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, materialGstRate: Number(e.target.value) }))} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}>{[0,5,12,18,28].map(rate => <option key={rate} value={rate}>{rate}%</option>)}</select></label>
           </div>
-
-          <div className="summary-box">
-
-            <div className="summary-row">
-              <span>Sub Total:</span>
-              <strong>
-                ₹ {totals.subTotal.toLocaleString('en-IN')}
-              </strong>
-            </div>
-
-            <div className="summary-row">
-              <span>Total GST:</span>
-              <strong>
-                ₹ {totals.gstAmount.toLocaleString('en-IN')}
-              </strong>
-            </div>
-
-            <div className="summary-row total">
-              <span>Grand Total:</span>
-              <strong>
-                ₹ {totals.grandTotal.toLocaleString('en-IN')}
-              </strong>
-            </div>
-
-          </div>
-
-          <div style={{ marginTop: 20 }}>
-            <Input
-              label="Subsidy Note"
-              name="subsidyAmount"
-              value={formData.subsidyAmount}
-              onChange={handleInputChange}
-              disabled={!isEditable}
-              placeholder="Enter subsidy details"
-            />
-          </div>
-
+          <div className="summary-box"><div className="summary-row"><span>Total Material Amount:</span><strong>₹ {totals.subTotal.toLocaleString('en-IN')}</strong></div><div className="summary-row"><span>GST ({formData.materialGstRate}%):</span><strong>₹ {totals.gstAmount.toLocaleString('en-IN')}</strong></div><div className="summary-row total"><span>Grand Total:</span><strong>₹ {totals.grandTotal.toLocaleString('en-IN')}</strong></div></div>
+          <div style={{ marginTop: 20 }}><Input label="Subsidy Note" name="subsidyAmount" value={formData.subsidyAmount} onChange={handleInputChange} disabled={!isEditable} placeholder="Enter subsidy details" /></div>
         </div>
 
-        {/* SECTION 3: BOM */}
-
+        {/* SECTION 3: BOM MATERIAL DETAILS ONLY */}
         <div className="form-card">
-
-          <div className="section-header-row">
-
-            <h3 className="section-title">
-              3. Bill of Material (BOM)
-            </h3>
-
-            {isEditable && (
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                icon={<FiPlus />}
-                onClick={addBomItem}
-              >
-                Add Item
-              </Button>
-            )}
-
-          </div>
-
-          <div className="bom-table-container">
-
-            <table className="bom-table">
-
-              <thead>
-                <tr>
-                  <th>Sr No.</th>
-                  <th>Description</th>
-                  <th>Qty</th>
-                  <th>Unit</th>
-                  <th>Rate</th>
-                  <th>GST %</th>
-                  <th>GST Amt</th>
-                  <th>Total</th>
-                  <th>Brand</th>
-                  {isEditable && <th>Action</th>}
-                </tr>
-              </thead>
-
-              <tbody>
-
-                {bomItems.map((item, index) => (
-                  <tr key={index}>
-
-                    <td>
-                      <input
-                        value={item.srNo}
-                        disabled={!isEditable}
-                        onChange={(e) =>
-                          handleBomChange(index, 'srNo', e.target.value)
-                        }
-                      />
-                    </td>
-
-                    <td>
-                      <input
-                        value={item.itemDescription}
-                        disabled={!isEditable}
-                        placeholder="Item description"
-                        onChange={(e) =>
-                          handleBomChange(index, 'itemDescription', e.target.value)
-                        }
-                      />
-                    </td>
-
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        value={item.qty}
-                        disabled={!isEditable}
-                        onChange={(e) =>
-                          handleBomChange(index, 'qty', e.target.value)
-                        }
-                      />
-                    </td>
-
-                    <td>
-                      <input
-                        value={item.unit}
-                        disabled={!isEditable}
-                        onChange={(e) =>
-                          handleBomChange(index, 'unit', e.target.value)
-                        }
-                      />
-                    </td>
-
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        value={item.rate}
-                        disabled={!isEditable}
-                        onChange={(e) =>
-                          handleBomChange(index, 'rate', e.target.value)
-                        }
-                      />
-                    </td>
-
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        value={item.gstRate}
-                        disabled={!isEditable}
-                        onChange={(e) =>
-                          handleBomChange(index, 'gstRate', e.target.value)
-                        }
-                      />
-                    </td>
-
-                    <td>
-                      ₹ {Number(item.gstAmount || 0).toLocaleString('en-IN')}
-                    </td>
-
-                    <td>
-                      <strong>
-                        ₹ {Number(item.total || 0).toLocaleString('en-IN')}
-                      </strong>
-                    </td>
-
-                    <td>
-                      <input
-                        value={item.brand}
-                        disabled={!isEditable}
-                        onChange={(e) =>
-                          handleBomChange(index, 'brand', e.target.value)
-                        }
-                      />
-                    </td>
-
-                    {isEditable && (
-                      <td>
-                        <button
-                          type="button"
-                          className="remove-btn"
-                          onClick={() => removeBomItem(index)}
-                        >
-                          <FiTrash2 />
-                        </button>
-                      </td>
-                    )}
-
-                  </tr>
-                ))}
-
-                {bomItems.length === 0 && (
-                  <tr>
-                    <td colSpan={isEditable ? 10 : 9}>
-                      No BOM items available.
-                    </td>
-                  </tr>
-                )}
-
-              </tbody>
-
-            </table>
-
-          </div>
-
+          <div className="section-header-row"><h3 className="section-title">3. Bill of Material (BOM)</h3>{isEditable && <Button type="button" variant="secondary" size="sm" icon={<FiPlus />} onClick={addBomItem}>Add Item</Button>}</div>
+          <div className="bom-table-container"><table className="bom-table"><thead><tr><th>Sr No.</th><th>Item Description</th><th>Qty</th><th>Unit</th><th>Brand</th>{isEditable && <th>Action</th>}</tr></thead><tbody>
+            {bomItems.map((item,index)=><tr key={index}><td><input value={item.srNo} disabled={!isEditable} onChange={e=>handleBomChange(index,'srNo',e.target.value)} /></td><td><input value={item.itemDescription} disabled={!isEditable} onChange={e=>handleBomChange(index,'itemDescription',e.target.value)} /></td><td><input type="number" min="0" value={item.qty} disabled={!isEditable} onChange={e=>handleBomChange(index,'qty',e.target.value)} /></td><td><input value={item.unit} disabled={!isEditable} onChange={e=>handleBomChange(index,'unit',e.target.value)} /></td><td><input value={item.brand} disabled={!isEditable} onChange={e=>handleBomChange(index,'brand',e.target.value)} /></td>{isEditable && <td><button type="button" className="remove-btn" onClick={()=>removeBomItem(index)}><FiTrash2 /></button></td>}</tr>)}
+            {bomItems.length===0 && <tr><td colSpan={isEditable?6:5}>No BOM items available.</td></tr>}
+          </tbody></table></div>
         </div>
-
-        {/* SECTION 4: TERMS */}
-
-        <div className="form-card">
-
-          <h3 className="section-title">
-            4. Terms & Conditions
-          </h3>
-
-          <textarea
-            name="termsAndConditions"
-            value={
-              Array.isArray(formData.termsAndConditions)
-                ? formData.termsAndConditions.join('\n')
-                : formData.termsAndConditions
-            }
-            onChange={handleInputChange}
-            disabled={!isEditable}
-            rows={5}
-            style={{
-              width: '100%',
-              padding: 12,
-              border: '1px solid #e2e8f0',
-              borderRadius: 8,
-              resize: 'vertical'
-            }}
-            placeholder="Enter terms and conditions"
-          />
-
-        </div>
-
-        {isEditable && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              variant="primary"
-              icon={<FiSave />}
-              type="submit"
-              isLoading={isSaving}
-              disabled={isSaving}
-            >
-              Update Quotation
-            </Button>
-          </div>
-        )}
 
       </form>
 

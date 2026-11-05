@@ -18,6 +18,15 @@ const invoiceService = {
     return response.data;
   },
 
+  downloadMaterialListPdf: async (id) => {
+    const response = await API.get(`/invoices/${id}/material-list/pdf`, {
+      responseType: 'arraybuffer',
+      headers: { Accept: 'application/pdf' },
+      transformResponse: [(data) => data],
+    });
+    return response.data;
+  },
+
   create: async (data) => (await API.post('/invoices', data)).data.data,
   update: async (id, data) => (await API.put(`/invoices/${id}`, data)).data.data,
   updateStatus: async (id, status) =>

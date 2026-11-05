@@ -36,7 +36,11 @@ const getBase64Image = async (filePath) => {
 const launchBrowser = async () => {
   console.log("🚀 Launching Puppeteer browser...");
 
+  const configuredChromePath = process.env.PUPPETEER_EXECUTABLE_PATH ||
+    (process.platform === "win32" ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" : undefined);
+
   const browser = await puppeteer.launch({
+    ...(configuredChromePath && fs.existsSync(configuredChromePath) ? { executablePath: configuredChromePath } : {}),
     headless: true,
 
     // Windows par default Chromium process configuration use karo.
@@ -86,6 +90,19 @@ const generateQuotationPDF = async (quotationData, customerData) => {
 
     const companyName = settings.companyName || "Gujrat Solar Energy";
     const companyAddress = settings.address || "";
+    // All four office addresses are printed on every quotation; no per-quotation branch selection.
+    const allBranchAddressesHtml = [
+      '<strong>HEAD OFFICE:</strong> 83/161-3, PARAMPURWA, JUHI, Juhi Colony Sub Post Office, Juhi Depo, Kanpur Nagar 208014',
+      '<strong>MAIN BRANCH:</strong> 131/370 A2, Begampurwa, near Baba Market, Kanpur Nagar 208023',
+      '<strong>AZAMGAGH BRANCH:</strong> Gaordeeh Aaima, near Petrol Pump, Chhatwara Sidhari Road, Kanpur, Uttar Pradesh - 208014',
+      '<strong>FATEHPUR BRANCH:</strong> Purana Bus Stand, Ram Ganj, Pakka Talab, Fatehpur',
+    ].join('<br>');
+    const allBranchAddressesText = [
+      'HEAD OFFICE: 83/161-3, PARAMPURWA, JUHI, Juhi Colony Sub Post Office, Juhi Depo, Kanpur Nagar 208014',
+      'MAIN BRANCH: 131/370 A2, Begampurwa, near Baba Market, Kanpur Nagar 208023',
+      'AZAMGAGH BRANCH: Gaordeeh Aaima, near Petrol Pump, Chhatwara Sidhari Road, Kanpur, Uttar Pradesh - 208014',
+      'FATEHPUR BRANCH: Purana Bus Stand, Ram Ganj, Pakka Talab, Fatehpur',
+    ].join('\n');
     const companyMobile = settings.mobile || "";
     const companyEmail = settings.email || "";
     const gstin = settings.gstin || "";
@@ -160,6 +177,24 @@ const generateQuotationPDF = async (quotationData, customerData) => {
         "Net meter / Smart meter charge in your scope.",
       ],
     };
+
+    const customTerms = quotationData.termsAndConditions || {};
+    const asLines = (value, fallback) => {
+      if (value === undefined || value === null || value === '') return fallback;
+      return Array.isArray(value) ? value : String(value).split(/\r?\n/).filter(Boolean);
+    };
+    terms.generalTerms = asLines(customTerms.generalTerms, terms.generalTerms);
+    terms.governmentSubsidy = asLines(customTerms.governmentSubsidy, terms.governmentSubsidy);
+    terms.panelWarranty = asLines(customTerms.panelWarranty || customTerms.warrantyDetails, terms.panelWarranty);
+    terms.inverterWarranty = asLines(customTerms.inverterWarranty, terms.inverterWarranty);
+    terms.batteryWarranty = asLines(customTerms.batteryWarranty, terms.batteryWarranty);
+    terms.bosWarranty = asLines(customTerms.bosWarranty, terms.bosWarranty);
+    terms.maintenanceWarranty = asLines(customTerms.maintenanceWarranty, terms.maintenanceWarranty);
+    terms.warrantyNotes = asLines(customTerms.warrantyNotes, terms.warrantyNotes);
+    terms.siteCompletion = asLines(customTerms.siteCompletionSchedule, terms.siteCompletion);
+    terms.paymentTerms = asLines(customTerms.paymentTerms, terms.paymentTerms);
+    terms.warrantyExclusions = asLines(customTerms.warrantyExclusions, terms.warrantyExclusions);
+    terms.scopeOfWork = asLines(customTerms.scopeOfWork, terms.scopeOfWork);
 
     const renderTermLines = (items) =>
       items.map((item) => `<p>${escapeHtml(item)}</p>`).join("");
@@ -774,7 +809,7 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     </div>
     <div class="cover-company">
       <h2>${escapeHtml(companyName)}</h2>
-      <p>${escapeHtml(companyAddress)}</p>
+      <p>${allBranchAddressesHtml}</p>
       <div class="cover-rule"></div>
       <p><strong>Lead:</strong> ${escapeHtml(quotationData.leadName || "-")}</p>
       <p><strong>ID:</strong> ${escapeHtml(quotationData.estimateNo || "-")}</p>
@@ -843,7 +878,7 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     <div>
       <div class="quote-label">From</div>
       <strong>${escapeHtml(companyName)}</strong><br>
-      ${escapeHtml(companyAddress)}<br>
+      ${allBranchAddressesHtml}<br>
       GSTIN: ${escapeHtml(gstin)}
     </div>
     <div>
@@ -983,7 +1018,7 @@ const generateQuotationPDF = async (quotationData, customerData) => {
 
   <h3>5. Operation &amp; Maintenance:</h3>
   <div class="term-points">
-    <p>We offer 5 years of O&amp;M support, including fault finding, remote monitoring, site visits, and assistance with warranty claims for components.</p>
+    ${renderTermLines(terms.maintenanceWarranty)}
   </div>
 
   <div class="footer"><span>${escapeHtml(companyName)}</span><span>6/9</span><span class="social-icons" aria-label="Social and contact links">
@@ -1087,7 +1122,7 @@ const generateQuotationPDF = async (quotationData, customerData) => {
   <div class="contact-grid">
     <div>
       <h3>${escapeHtml(companyName)}</h3>
-      ${formatContactAddress(companyAddress)}
+      ${formatContactAddress(allBranchAddressesText)}
     </div>
     <div>
       <h3>MOBILE</h3>

@@ -100,10 +100,10 @@ const summarizeInvoiceItems = (sourceItems = []) => {
   ].filter(Boolean);
 };
 
-const buildInvoiceHtml = invoice => {
+const buildInvoiceHtml = (invoice, fullMaterialList = false) => {
   const customer = invoice.customer || {};
   const sourceItems = Array.isArray(invoice.items) ? invoice.items : [];
-  const items = summarizeInvoiceItems(sourceItems);
+  const items = fullMaterialList ? sourceItems : summarizeInvoiceItems(sourceItems);
   const cgst = Number(invoice.cgst_2_5 || 0) + Number(invoice.cgst_6 || 0) + Number(invoice.cgst_9 || 0) + Number(invoice.cgst_14 || 0);
   const sgst = Number(invoice.sgst_2_5 || 0) + Number(invoice.sgst_6 || 0) + Number(invoice.sgst_9 || 0) + Number(invoice.sgst_14 || 0);
   const taxRows = [
@@ -154,7 +154,7 @@ const buildInvoiceHtml = invoice => {
     .footer{position:fixed;bottom:-7mm;left:0;right:0;border-top:1px solid #e5e5e5;padding-top:4px;display:flex;justify-content:space-between;color:#555;font-size:7px}
     @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
   </style></head><body>
-    <div class="topline"><span>TAX INVOICE</span><span class="original">ORIGINAL FOR RECIPIENT</span></div>
+    <div class="topline"><span>${fullMaterialList ? 'FULL MATERIAL LIST' : 'TAX INVOICE'}</span><span class="original">${fullMaterialList ? 'MATERIAL DETAILS' : 'ORIGINAL FOR RECIPIENT'}</span></div>
     <section class="company"><div><h2>${COMPANY.name}</h2><p><strong>GSTIN ${COMPANY.gstin}</strong></p>${COMPANY.addressLines.map(line => `<p>${escapeHtml(line)}</p>`).join('')}<p>Mobile ${COMPANY.mobile} &nbsp; Email ${COMPANY.email}</p><p>Website ${COMPANY.website}</p></div>${logo ? `<img class="logo" src="${logo}" alt="Gujarat Solar Energy logo">` : ''}</section>
     <section class="meta"><div><strong>Invoice #:</strong> ${escapeHtml(invoice.invoiceNo)}</div><div><strong>Invoice Date:</strong> ${date(invoice.invoiceDate)}</div><div><strong>Due Date:</strong> ${date(invoice.dueDate)}</div></section>
     <section class="customer"><div class="heading">Customer Details:</div><div><strong>${escapeHtml(customer.name || '—')}</strong></div><div>Ph: ${escapeHtml(customer.mobile || customer.phone || '—')}</div>${customer.address ? `<div>${escapeHtml(customer.address)}</div>` : ''}<div style="margin-top:4px">Place of Supply:<br><strong>${escapeHtml(invoice.placeOfSupply || '09-UTTAR PRADESH')}</strong></div>${quotationLine}</section>
@@ -163,12 +163,12 @@ const buildInvoiceHtml = invoice => {
     <div class="bottom-line"><div>Total Items / Qty : ${sourceItems.length} / ${money(totalQty).replace(/\.00$/, '')}</div><div class="words">${amountWords ? `Total amount (in words): ${amountWords}` : ''}</div></div>
     <div class="payable"><span>Amount Payable:</span><span>₹${money(invoice.grandTotal)}</span></div>
     <div class="signature-block"><div class="for">For ${COMPANY.name}</div>${signature ? `<img class="signature" src="${signature}" alt="Authorized signature">` : '<div style="height:52px"></div>'}<div class="sign-label">Authorized Signatory</div></div>
-    <div class="footer"><span>${COMPANY.name} | Tax Invoice</span><span>Page 1 / 1 • Digitally generated document</span></div>
+    <div class="footer"><span>${COMPANY.name} | Tax Invoice</span><span>${fullMaterialList ? 'Full material details • Digitally generated document' : 'Page 1 / 1 • Digitally generated document'}</span></div>
   </body></html>`;
 };
 
 
-const generateInvoicePdf = async (invoice) => {
+const generateInvoicePdf = async (invoice, options = {}) => {
   const browser = await puppeteer.launch({
     headless: true,
     args: [
@@ -189,7 +189,7 @@ const generateInvoicePdf = async (invoice) => {
     });
 
     // Avoid networkidle0 timeout
-    const html = buildInvoiceHtml(invoice);
+    const html = buildInvoiceHtml(invoice, options.fullMaterialList === true);
 
     await page.setContent(html, {
       waitUntil: 'domcontentloaded',

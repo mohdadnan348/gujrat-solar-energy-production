@@ -415,11 +415,64 @@ const downloadInvoicePDF = catchAsync(async (req, res) => {
   return res.end(pdfBuffer);
 });
 
+
+const downloadInvoiceMaterialListPDF = catchAsync(async (req, res) => {
+  const invoice = await Invoice.findById(req.params.id)
+    .populate("customer")
+    .populate("quotation", "estimateNo");
+
+  if (!invoice)
+    return res
+      .status(404)
+      .json(new ApiResponse(404, null, "Invoice not found"));
+
+  if (
+    req.user.role === "HR" &&
+    !(await isInvoiceOwnedByHR(invoice, req.user._id))
+  ) {
+    return res
+      .status(403)
+      .json(new ApiResponse(403, null, "You can access only your team's invoices"));
+  }
+
+  const generatedPdf = await generateInvoicePdf(invoice.toObject(), { fullMaterialList: true });
+  const pdfBuffer = Buffer.isBuffer(generatedPdf)
+    ? generatedPdf
+    : Buffer.from(generatedPdf);
+
+  if (
+    pdfBuffer.length < 5 ||
+    pdfBuffer.subarray(0, 5).toString("ascii") !== "%PDF-"
+  ) {
+    throw new Error(
+      "PDF generation did not return a valid PDF binary. Check invoicePdfService.",
+    );
+  }
+
+  const safeInvoiceNo = String(invoice.invoiceNo || "invoice").replace(
+    /[^a-zA-Z0-9-_]/g,
+    "_",
+  );
+
+  res.status(200);
+  res.set({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": `attachment; filename="${safeInvoiceNo}.pdf"`,
+    "Content-Length": String(pdfBuffer.length),
+    "Cache-Control": "private, no-store, no-cache, must-revalidate",
+    Pragma: "no-cache",
+    "X-Content-Type-Options": "nosniff",
+  });
+
+  return res.end(pdfBuffer);
+});
+
 module.exports = {
   createInvoice,
   getInvoices,
   getInvoiceById,
   downloadInvoicePDF,
+  downloadInvoiceMaterialListPDF,
   updateInvoice,
   updateInvoiceStatus,
   recordPayment,

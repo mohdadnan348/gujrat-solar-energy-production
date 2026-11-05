@@ -25,6 +25,7 @@ const quotationSchema = new mongoose.Schema({
   },
   
   leadName: { type: String },
+  branch: { type: String, enum: ['HEAD_OFFICE', 'MAIN_BRANCH', 'AZAMGAGH_BRANCH', 'FATEHPUR_BRANCH'], default: 'HEAD_OFFICE' },
   plantCapacity: { type: String },
   
   date: { type: Date, default: Date.now },
@@ -41,6 +42,8 @@ const quotationSchema = new mongoose.Schema({
     totalAmountWithTax: { type: Number }
   },
   
+  materialTotalAmount: { type: Number, default: 0 },
+  materialGstRate: { type: Number, default: 5 },
   subTotal: { type: Number },
   gstAmount: { type: Number },
   grandTotal: { type: Number },
@@ -56,6 +59,12 @@ const quotationSchema = new mongoose.Schema({
     generalTerms: { type: String },
     governmentSubsidy: { type: String },
     warrantyDetails: { type: String },
+    panelWarranty: { type: String },
+    inverterWarranty: { type: String },
+    batteryWarranty: { type: String },
+    bosWarranty: { type: String },
+    maintenanceWarranty: { type: String },
+    warrantyNotes: { type: String },
     siteCompletionSchedule: { type: String },
     paymentTerms: { type: String },
     warrantyExclusions: { type: String },

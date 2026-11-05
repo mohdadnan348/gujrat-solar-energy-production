@@ -9,6 +9,7 @@ const {
   updateInvoiceStatus,
   recordPayment,
   downloadInvoicePDF,
+  downloadInvoiceMaterialListPDF,
 } = require("../controllers/invoiceController");
 
 const { protect } = require("../middlewares/authMiddleware");
@@ -25,6 +26,7 @@ router.get("/:id", authorize("Admin", "HR"), getInvoiceById);
 router.post("/", authorize("Admin", "HR"), createInvoice);
 router.put("/:id", authorize("Admin", "HR"), updateInvoice);
 router.get("/:id/pdf", authorize("Admin", "HR"), downloadInvoicePDF);
+router.get("/:id/material-list/pdf", authorize("Admin", "HR"), downloadInvoiceMaterialListPDF);
 
 // Admin can set Sent/Cancelled; HR can set Sent only for their own team.
 router.put("/:id/status", authorize("Admin", "HR"), updateInvoiceStatus);

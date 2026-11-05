@@ -67,46 +67,11 @@ const QuotationView = () => {
   if (error) return <div className="error-message">{error}</div>;
   if (!quotation) return null;
 
-  const calculateItemTotals = (item) => {
-    const qty = parseFloat(item.qty) || 0;
-    const rate = parseFloat(item.rate) || 0;
-    const gstPercent = parseFloat(item.gstRate) || 0;
-    const baseTotal = qty * rate;
-    const gstAmount = baseTotal * (gstPercent / 100);
-    return {
-      baseTotal: baseTotal.toFixed(2),
-      gstAmount: gstAmount.toFixed(2),
-      total: (baseTotal + gstAmount).toFixed(2),
-    };
-  };
-
-  // Derive summary from BOM so older quotations with saved gstAmount = 0
-  // still display the correct GST and grand total.
-  const quotationTotals = (quotation.bom || []).reduce(
-    (totals, item) => {
-      const qty = Number(item.qty) || 0;
-      const rate = Number(item.rate) || 0;
-      const gstRate = Number(item.gstRate) || 0;
-      const baseAmount = qty * rate;
-      const itemGst = Number((baseAmount * gstRate / 100).toFixed(2));
-
-      totals.subTotal += baseAmount;
-      totals.gstAmount += itemGst;
-      return totals;
-    },
-    { subTotal: 0, gstAmount: 0 }
-  );
-
-  const hasBom = Array.isArray(quotation.bom) && quotation.bom.length > 0;
-  const displayedSubTotal = hasBom
-    ? Number(quotationTotals.subTotal.toFixed(2))
-    : Number(quotation.subTotal) || 0;
-  const displayedGstAmount = hasBom
-    ? Number(quotationTotals.gstAmount.toFixed(2))
-    : Number(quotation.gstAmount) || 0;
-  const displayedGrandTotal = hasBom
-    ? Number((displayedSubTotal + displayedGstAmount).toFixed(2))
-    : Number(quotation.grandTotal) || 0;
+  // Combined material pricing: BOM is descriptive only; GST is applied once to the material total.
+  const displayedSubTotal = Number(quotation.materialTotalAmount ?? quotation.subTotal) || 0;
+  const materialGstRate = Number(quotation.materialGstRate ?? 5);
+  const displayedGstAmount = Number(quotation.gstAmount) || Number((displayedSubTotal * materialGstRate / 100).toFixed(2));
+  const displayedGrandTotal = Number(quotation.grandTotal) || Number((displayedSubTotal + displayedGstAmount).toFixed(2));
 
   return (
     <div className="quotation-view-page">
@@ -161,30 +126,19 @@ const QuotationView = () => {
                   <th>Description</th>
                   <th>Qty</th>
                   <th>Unit</th>
-                  <th>Rate</th>
-                  <th>GST %</th>
-                  <th>GST Amt</th>
-                  <th>Total</th>
                   <th>Brand</th>
                 </tr>
               </thead>
               <tbody>
-                {(quotation.bom || []).map((item, index) => {
-                  const totals = calculateItemTotals(item);
-                  return (
-                    <tr key={index}>
-                      <td>{item.srNo}</td>
-                      <td>{item.itemDescription}</td>
-                      <td>{item.qty}</td>
-                      <td>{item.unit}</td>
-                      <td>₹{parseFloat(item.rate).toLocaleString('en-IN')}</td>
-                      <td>{item.gstRate}%</td>
-                      <td>₹{parseFloat(totals.gstAmount).toLocaleString('en-IN')}</td>
-                      <td className="font-bold">₹{parseFloat(totals.total).toLocaleString('en-IN')}</td>
-                      <td>{item.brand}</td>
-                    </tr>
-                  );
-                })}
+                {(quotation.bom || []).map((item, index) => (
+                  <tr key={index}>
+                    <td>{item.srNo || index + 1}</td>
+                    <td>{item.itemDescription}</td>
+                    <td>{item.qty}</td>
+                    <td>{item.unit}</td>
+                    <td>{item.brand}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -196,7 +150,7 @@ const QuotationView = () => {
             <span>₹{displayedSubTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
           </div>
           <div className="summary-row">
-            <span>Total GST:</span>
+            <span>GST ({materialGstRate}%):</span>
             <span>₹{displayedGstAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
           </div>
           <div className="summary-row grand-total">

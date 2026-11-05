@@ -38,8 +38,8 @@ const generateEstimateNo = async () => {
 // @access  Private (Admin only)
 const createQuotation = catchAsync(async (req, res) => {
   const { 
-    customerId, leadName, plantCapacity, date, expiryDate, 
-    mainItem, subTotal, gstAmount, grandTotal, subsidyAmount, 
+    customerId, leadName, plantCapacity, branch, date, expiryDate, 
+    mainItem, materialTotalAmount, materialGstRate, subTotal, gstAmount, grandTotal, subsidyAmount, 
     bom, termsAndConditions, panelCount 
   } = req.body;
 
@@ -74,11 +74,14 @@ const createQuotation = catchAsync(async (req, res) => {
     customer: customerId,
     leadName,
     plantCapacity,
+    branch: branch || 'HEAD_OFFICE',
     date: date || Date.now(),
     expiryDate,
     createdBy: req.user._id,
     ownerHR: req.user.role === 'HR' ? req.user._id : null,
     mainItem,
+    materialTotalAmount: Number(materialTotalAmount ?? subTotal) || 0,
+    materialGstRate: Number(materialGstRate ?? 5),
     subTotal,
     gstAmount,
     grandTotal,
@@ -166,8 +169,8 @@ const updateQuotation = catchAsync(async (req, res) => {
   }
 
   const allowedUpdates = [
-    'leadName', 'plantCapacity', 'expiryDate', 'mainItem', 
-    'subTotal', 'gstAmount', 'grandTotal', 'subsidyAmount', 
+    'leadName', 'plantCapacity', 'branch', 'expiryDate', 'mainItem', 
+    'materialTotalAmount', 'materialGstRate', 'subTotal', 'gstAmount', 'grandTotal', 'subsidyAmount', 
     'panelCount', 'roofImageUrl', 'bom', 'termsAndConditions', 'amountInWords'
   ];
   
