@@ -18,6 +18,10 @@ import LeadList from "./pages/Admin/Leads/LeadList";
 import LeadDetails from "./pages/Admin/Leads/LeadDetails";
 import QuotationList from "./pages/Admin/Quotations/QuotationList";
 import CreateQuotation from "./pages/Admin/Quotations/CreateQuotation";
+import HRCreateQuotation from "./pages/HR/Quotations/CreateQuotation";
+import HRQuotationList from "./pages/HR/Quotations/QuotationList";
+import HRQuotationView from "./pages/HR/Quotations/QuotationView";
+import HREditQuotation from "./pages/HR/Quotations/EditQuotation";
 import QuotationView from "./pages/Admin/Quotations/QuotationView";
 import EditQuotation from "./pages/Admin/Quotations/EditQuotation";
 import InvoiceList from "./pages/Admin/Invoices/InvoiceList";
@@ -93,10 +97,10 @@ function App() {
           <Route path="/hr/customers" element={<HRLayout><CustomerList /></HRLayout>} />
           <Route path="/hr/leads" element={<HRLayout><LeadList /></HRLayout>} />
           <Route path="/hr/leads/:id" element={<HRLayout><LeadDetails /></HRLayout>} />
-          <Route path="/hr/quotations" element={<HRLayout><QuotationList /></HRLayout>} />
-          <Route path="/hr/quotations/create" element={<HRLayout><CreateQuotation /></HRLayout>} />
-          <Route path="/hr/quotations/:id" element={<HRLayout><QuotationView /></HRLayout>} />
-          <Route path="/hr/quotations/edit/:id" element={<HRLayout><EditQuotation /></HRLayout>} />
+          <Route path="/hr/quotations" element={<HRLayout><HRQuotationList /></HRLayout>} />
+          <Route path="/hr/quotations/create" element={<HRLayout><HRCreateQuotation /></HRLayout>} />
+          <Route path="/hr/quotations/:id" element={<HRLayout><HRQuotationView /></HRLayout>} />
+          <Route path="/hr/quotations/edit/:id" element={<HRLayout><HREditQuotation /></HRLayout>} />
           <Route path="/hr/invoices" element={<HRLayout><HRInvoiceList /></HRLayout>} />
           <Route path="/hr/invoices/create" element={<HRLayout><HRCreateInvoice /></HRLayout>} />
           <Route path="/hr/invoices/:id" element={<HRLayout><HRInvoiceView /></HRLayout>} />

@@ -143,11 +143,22 @@ const Leave = require('../models/Leave');
 
 const getHRStats = catchAsync(async (req, res) => {
   const ownerHR = req.user._id;
-  const [totalEmployees, totalLeads, totalCustomers, totalTasks, pendingTasks,
-    pendingLeaves, attendanceToday, recentLeads] = await Promise.all([
+
+  // Use the same ownership rules as the HR list APIs so dashboard counts
+  // match the records visible in the HR Quotations and Invoices pages.
+  const hrCustomers = await Customer.find({ ownerHR }).select('_id');
+  const hrCustomerIds = hrCustomers.map((customer) => customer._id);
+
+  const [totalEmployees, totalLeads, totalCustomers, totalQuotations,
+    totalInvoices, totalTasks, pendingTasks, pendingLeaves,
+    attendanceToday, recentLeads] = await Promise.all([
     User.countDocuments({ role: 'Employee', $or: [{ reportingTo: ownerHR }, { createdBy: ownerHR }] }),
     Lead.countDocuments({ ownerHR }),
     Customer.countDocuments({ ownerHR }),
+    // HR quotation list uses ownerHR OR createdBy ownership.
+    Quotation.countDocuments({ $or: [{ ownerHR }, { createdBy: ownerHR }] }),
+    // HR invoice list is scoped to invoices belonging to HR-owned customers.
+    Invoice.countDocuments({ customer: { $in: hrCustomerIds } }),
     Task.countDocuments({ ownerHR }),
     Task.countDocuments({ ownerHR, status: { $ne: 'Completed' } }),
     Leave.countDocuments({ ownerHR, status: 'Pending' }),
@@ -163,8 +174,9 @@ const getHRStats = catchAsync(async (req, res) => {
   ]);
 
   return res.status(200).json(new ApiResponse(200, {
-    totalEmployees, totalLeads, totalCustomers, totalTasks, pendingTasks,
-    pendingLeaves, attendanceToday, recentLeads, generatedAt: new Date().toISOString(),
+    totalEmployees, totalLeads, totalCustomers, totalQuotations, totalInvoices,
+    totalTasks, pendingTasks, pendingLeaves, attendanceToday, recentLeads,
+    generatedAt: new Date().toISOString(),
   }, 'HR dashboard stats fetched successfully'));
 });
 

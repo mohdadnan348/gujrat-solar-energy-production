@@ -22,10 +22,12 @@ export default function HRLayout({ children }) {
 
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role === 'Admin') {
+  const role = String(user?.role || '').trim().toLowerCase();
+
+  if (role === 'admin') {
     return <Navigate to="/admin/dashboard" replace />;
   }
-  if (user.role !== 'HR') {
+  if (role !== 'hr') {
     return <Navigate to="/employee/dashboard" replace />;
   }
 
