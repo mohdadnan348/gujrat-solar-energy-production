@@ -49,7 +49,16 @@ const createQuotation = catchAsync(async (req, res) => {
   }
 
   const estimateNo = await generateEstimateNo();
-  const calculatedAmountInWords = amountInWords(grandTotal); 
+  const capacityKw = Number.parseFloat(String(plantCapacity || '').replace(/[^0-9.]/g, '')) || 0;
+  // Default package pricing is ₹60,000 per kW. An explicitly entered amount wins.
+  const resolvedMaterialAmount = materialTotalAmount !== undefined && materialTotalAmount !== null && materialTotalAmount !== ''
+    ? Number(materialTotalAmount)
+    : (capacityKw * 60000);
+  const resolvedGstRate = Number(materialGstRate ?? 5);
+  const resolvedSubTotal = Number.isFinite(resolvedMaterialAmount) ? resolvedMaterialAmount : 0;
+  const resolvedGstAmount = Number((resolvedSubTotal * resolvedGstRate / 100).toFixed(2));
+  const resolvedGrandTotal = Number((resolvedSubTotal + resolvedGstAmount).toFixed(2));
+  const calculatedAmountInWords = amountInWords(resolvedGrandTotal); 
 
   // Use the pre-downloaded image for the exact panel count. Never generate an image.
   const roofImageUrl = getPanelImagePath(panelCount);
@@ -80,11 +89,11 @@ const createQuotation = catchAsync(async (req, res) => {
     createdBy: req.user._id,
     ownerHR: req.user.role === 'HR' ? req.user._id : null,
     mainItem,
-    materialTotalAmount: Number(materialTotalAmount ?? subTotal) || 0,
-    materialGstRate: Number(materialGstRate ?? 5),
-    subTotal,
-    gstAmount,
-    grandTotal,
+    materialTotalAmount: resolvedSubTotal,
+    materialGstRate: resolvedGstRate,
+    subTotal: resolvedSubTotal,
+    gstAmount: resolvedGstAmount,
+    grandTotal: resolvedGrandTotal,
     subsidyAmount,
     amountInWords: calculatedAmountInWords,
     panelCount,
@@ -140,6 +149,19 @@ const updateQuotation = catchAsync(async (req, res) => {
 
   if (quotation.status !== 'Draft') {
     return res.status(400).json(new ApiResponse(400, null, `Cannot edit a quotation with status: ${quotation.status}`));
+  }
+
+  if (req.body.plantCapacity !== undefined && req.body.materialTotalAmount === undefined) {
+    const capacityKw = Number.parseFloat(String(req.body.plantCapacity || '').replace(/[^0-9.]/g, '')) || 0;
+    if (capacityKw > 0) {
+      const amount = Math.round(capacityKw * 60000);
+      const gstRate = Number(req.body.materialGstRate ?? quotation.materialGstRate ?? 5);
+      const gst = Number((amount * gstRate / 100).toFixed(2));
+      req.body.materialTotalAmount = amount;
+      req.body.subTotal = amount;
+      req.body.gstAmount = gst;
+      req.body.grandTotal = Number((amount + gst).toFixed(2));
+    }
   }
 
   if (req.body.panelCount !== undefined) {

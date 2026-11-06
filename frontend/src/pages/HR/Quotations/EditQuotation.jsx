@@ -15,6 +15,21 @@ import quotationService from '../../../services/quotationService';
 
 import './EditQuotation.css';
 
+const DEFAULT_TERMS_AND_CONDITIONS = {
+  "generalTerms": "Material dispatch and Installation shall be started upon DISCOM approval only.\nFor better performance, solar panels should be cleaned by customer two times in a week.\nConcealed wiring shall be done by company, if possible only. Otherwise, customer should do concealed wiring with their wiremen where material shall be provided by Company.\nAfter successful installation, Customer shall take care of solar plant by doing timely cleaning. If we found less generation at the time of attending complaint due to non-cleaning, we may charge you additional service charge.\nThere is manufacturing warranty for all electronics equipment. Company will help to claim this warranty if require.",
+  "governmentSubsidy": "Subsidy Credit: If applicable, any subsidy will be directly credited to the customer's account. Our company will handle all necessary documentation with the government.\nDelay Disclaimer: Please note that subsidy amounts may experience delays from the government's side. Our company is not liable to compensate for any delays or non-receipt of subsidies if not provided by the government.",
+  "panelWarranty": "90% of rated capacity for the first 15 years.\n80% of rated capacity for the next 15 years.\nTotal Panel Life: 30 years.\nRefer Solar Panel Datasheet for detailed warranty terms.",
+  "inverterWarranty": "12 years, extendable.\nRefer Inverter Datasheet for detailed warranty terms.",
+  "batteryWarranty": "8 years, Extendable.\nRefer Battery Datasheet for detailed warranty terms.",
+  "bosWarranty": "Equipment/products supplied by us which are warranted against defects due to poor material, design, or workmanship.\nThis warranty is valid for 12 months from the date of commissioning or when put into service, whichever is earlier.",
+  "maintenanceWarranty": "We offer 5 years of O&M support, including fault finding, remote monitoring, site visits, and assistance with warranty claims for components.\nO&M does not include solar panel cleaning and washing.",
+  "warrantyNotes": "All warranties provided by the manufacturer/supplier are in favor of the buyer and cover the equipment for the specified period.\nWarranties ensure safe working of individual components and vary in validity period.\nWarranties do not cover damages caused by external hazardous conditions.",
+  "siteCompletionSchedule": "Dispatch within 6 weeks after order confirmation with payment.\nThe entire power plant will be installed and commissioned within 60-70 days (approx.) after project accreditation, contract agreement, and possession of the site.",
+  "paymentTerms": "50% advance payment upon contract signing.\n40% upon delivery of structure material.\n10% before meter installation is complete.",
+  "warrantyExclusions": "Damage or defect caused by transportation, accident, misuse, lack of maintenance, improper usage, or negligence by the owner.\nWilful damage, normal wear and tear, abuse, or misuse of equipment/product.\nDamage or defect caused by Force Majeure events, including fire, earthquake, flood, or other natural disasters.\nDamage or defect caused by unauthorized alterations, modifications, or conversions.\nRepairs carried out by personnel not authorized by the contractor.\nDefects or damages due to external causes.\nParts and components repaired or replaced during the warranty period are warranted only for the original warranty period. The contractor will take back replaced or defective material.",
+  "scopeOfWork": "Providing access/approach to rooftop.\nIf any electrical modification is required from DISCOM (i.e. ELCB, changeover switch etc.) Customer shall provide necessary support.\nProvide necessary documents for project approvals from State/Central Government.\nSite clearance, ladders, water, and electricity supply for smooth installation and commissioning of the project.\nCustomer shall provide Safe Place for Material unloading and storage during the work execution.\nNet meter / Smart meter charge in your scope."
+};
+
 const initialMainItem = {
   description: '',
   panelDetails: '',
@@ -50,7 +65,7 @@ const EditQuotation = () => {
     gstAmount: 0,
     grandTotal: 0,
     subsidyAmount: '',
-    termsAndConditions: { generalTerms: '', governmentSubsidy: '', warrantyDetails: '', panelWarranty: '', inverterWarranty: '', batteryWarranty: '', bosWarranty: '', maintenanceWarranty: '', warrantyNotes: '', siteCompletionSchedule: '', paymentTerms: '', warrantyExclusions: '', scopeOfWork: '' }
+    termsAndConditions: { ...DEFAULT_TERMS_AND_CONDITIONS, warrantyDetails: DEFAULT_TERMS_AND_CONDITIONS.panelWarranty }
   });
 
   const [bomItems, setBomItems] = useState([]);
@@ -100,7 +115,7 @@ const EditQuotation = () => {
           grandTotal: Number(data.grandTotal) || 0,
 
           subsidyAmount: data.subsidyAmount || '',
-          termsAndConditions: { generalTerms: '', governmentSubsidy: '', warrantyDetails: '', panelWarranty: '', inverterWarranty: '', batteryWarranty: '', bosWarranty: '', maintenanceWarranty: '', warrantyNotes: '', siteCompletionSchedule: '', paymentTerms: '', warrantyExclusions: '', scopeOfWork: '', ...(data.termsAndConditions || {}) }
+          termsAndConditions: { ...DEFAULT_TERMS_AND_CONDITIONS, warrantyDetails: DEFAULT_TERMS_AND_CONDITIONS.panelWarranty, ...(data.termsAndConditions || {}) }
         });
 
         setBomItems(
@@ -156,6 +171,17 @@ const EditQuotation = () => {
       ...prev,
       [name]: value
     }));
+
+    // Changing plant capacity suggests ₹60,000 per kW; the total amount
+    // can still be manually overridden in the pricing section.
+    if (name === 'plantCapacity') {
+      const capacity = Number.parseFloat(String(value).replace(/[^0-9.]/g, '')) || 0;
+      setFormData(prev => ({
+        ...prev,
+        plantCapacity: value,
+        materialTotalAmount: capacity > 0 ? Math.round(capacity * 60000) : 0
+      }));
+    }
   };
 
   const handleMainItemChange = (e) => {
@@ -464,7 +490,7 @@ const EditQuotation = () => {
         <div className="form-card">
           <h3 className="section-title">2. Combined Material Pricing</h3>
           <div className="form-grid" style={{ alignItems: 'end' }}>
-            <Input label="Total Material Amount (₹) — All Materials Combined" type="number" value={formData.materialTotalAmount} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, materialTotalAmount: e.target.value }))} />
+            <Input label="Total Material Amount (₹) — ₹60,000 per kW default, editable" type="number" value={formData.materialTotalAmount} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, materialTotalAmount: e.target.value }))} />
             <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>GST Rate<select value={formData.materialGstRate} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, materialGstRate: Number(e.target.value) }))} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}>{[0,5,12,18,28].map(rate => <option key={rate} value={rate}>{rate}%</option>)}</select></label>
           </div>
           <div className="summary-box"><div className="summary-row"><span>Total Material Amount:</span><strong>₹ {totals.subTotal.toLocaleString('en-IN')}</strong></div><div className="summary-row"><span>GST ({formData.materialGstRate}%):</span><strong>₹ {totals.gstAmount.toLocaleString('en-IN')}</strong></div><div className="summary-row total"><span>Grand Total:</span><strong>₹ {totals.grandTotal.toLocaleString('en-IN')}</strong></div></div>
@@ -478,6 +504,212 @@ const EditQuotation = () => {
             {bomItems.map((item,index)=><tr key={index}><td><input value={item.srNo} disabled={!isEditable} onChange={e=>handleBomChange(index,'srNo',e.target.value)} /></td><td><input value={item.itemDescription} disabled={!isEditable} onChange={e=>handleBomChange(index,'itemDescription',e.target.value)} /></td><td><input type="number" min="0" value={item.qty} disabled={!isEditable} onChange={e=>handleBomChange(index,'qty',e.target.value)} /></td><td><input value={item.unit} disabled={!isEditable} onChange={e=>handleBomChange(index,'unit',e.target.value)} /></td><td><input value={item.brand} disabled={!isEditable} onChange={e=>handleBomChange(index,'brand',e.target.value)} /></td>{isEditable && <td><button type="button" className="remove-btn" onClick={()=>removeBomItem(index)}><FiTrash2 /></button></td>}</tr>)}
             {bomItems.length===0 && <tr><td colSpan={isEditable?6:5}>No BOM items available.</td></tr>}
           </tbody></table></div>
+        </div>
+
+
+        {/* SECTION 4: EDITABLE TERMS & CONDITIONS */}
+        <div className="form-card terms-edit-card">
+          <h3 className="section-title">4. Terms &amp; Conditions</h3>
+          <p style={{ color: "#64748b", fontSize: 13, marginTop: -6, marginBottom: 16 }}>
+            Edit the terms below. These saved values are used when the quotation PDF is generated.
+          </p>
+          <div className="form-grid">
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>General Terms</label>
+              <textarea
+                name="generalTerms"
+                value={formData.termsAndConditions?.generalTerms || ""}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  termsAndConditions: { ...prev.termsAndConditions, generalTerms: e.target.value }
+                }))}
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter general terms..."
+                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
+              />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Government Subsidy</label>
+              <textarea
+                name="governmentSubsidy"
+                value={formData.termsAndConditions?.governmentSubsidy || ""}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  termsAndConditions: { ...prev.termsAndConditions, governmentSubsidy: e.target.value }
+                }))}
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter government subsidy..."
+                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
+              />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Warranty Details</label>
+              <textarea
+                name="warrantyDetails"
+                value={formData.termsAndConditions?.warrantyDetails || ""}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  termsAndConditions: { ...prev.termsAndConditions, warrantyDetails: e.target.value }
+                }))}
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter warranty details..."
+                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
+              />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Solar Panel Warranty</label>
+              <textarea
+                name="panelWarranty"
+                value={formData.termsAndConditions?.panelWarranty || ""}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  termsAndConditions: { ...prev.termsAndConditions, panelWarranty: e.target.value }
+                }))}
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter solar panel warranty..."
+                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
+              />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Inverter Warranty</label>
+              <textarea
+                name="inverterWarranty"
+                value={formData.termsAndConditions?.inverterWarranty || ""}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  termsAndConditions: { ...prev.termsAndConditions, inverterWarranty: e.target.value }
+                }))}
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter inverter warranty..."
+                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
+              />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Battery Warranty</label>
+              <textarea
+                name="batteryWarranty"
+                value={formData.termsAndConditions?.batteryWarranty || ""}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  termsAndConditions: { ...prev.termsAndConditions, batteryWarranty: e.target.value }
+                }))}
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter battery warranty..."
+                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
+              />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>BOS Warranty</label>
+              <textarea
+                name="bosWarranty"
+                value={formData.termsAndConditions?.bosWarranty || ""}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  termsAndConditions: { ...prev.termsAndConditions, bosWarranty: e.target.value }
+                }))}
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter bos warranty..."
+                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
+              />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Maintenance / Service Warranty</label>
+              <textarea
+                name="maintenanceWarranty"
+                value={formData.termsAndConditions?.maintenanceWarranty || ""}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  termsAndConditions: { ...prev.termsAndConditions, maintenanceWarranty: e.target.value }
+                }))}
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter maintenance / service warranty..."
+                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
+              />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Additional Warranty Notes</label>
+              <textarea
+                name="warrantyNotes"
+                value={formData.termsAndConditions?.warrantyNotes || ""}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  termsAndConditions: { ...prev.termsAndConditions, warrantyNotes: e.target.value }
+                }))}
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter additional warranty notes..."
+                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
+              />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Site Completion Schedule</label>
+              <textarea
+                name="siteCompletionSchedule"
+                value={formData.termsAndConditions?.siteCompletionSchedule || ""}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  termsAndConditions: { ...prev.termsAndConditions, siteCompletionSchedule: e.target.value }
+                }))}
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter site completion schedule..."
+                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
+              />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Payment Terms</label>
+              <textarea
+                name="paymentTerms"
+                value={formData.termsAndConditions?.paymentTerms || ""}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  termsAndConditions: { ...prev.termsAndConditions, paymentTerms: e.target.value }
+                }))}
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter payment terms..."
+                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
+              />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Warranty Exclusions</label>
+              <textarea
+                name="warrantyExclusions"
+                value={formData.termsAndConditions?.warrantyExclusions || ""}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  termsAndConditions: { ...prev.termsAndConditions, warrantyExclusions: e.target.value }
+                }))}
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter warranty exclusions..."
+                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
+              />
+            </div>
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Scope of Work</label>
+              <textarea
+                name="scopeOfWork"
+                value={formData.termsAndConditions?.scopeOfWork || ""}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  termsAndConditions: { ...prev.termsAndConditions, scopeOfWork: e.target.value }
+                }))}
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter scope of work..."
+                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
+              />
+            </div>
+          </div>
         </div>
 
       </form>

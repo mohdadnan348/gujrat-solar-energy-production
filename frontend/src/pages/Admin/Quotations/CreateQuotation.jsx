@@ -107,7 +107,14 @@ const CreateQuotation = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData(prev => ({ ...prev, [name]: value }));
+
+    // Default quotation amount: ₹60,000 per kW. The amount field remains editable,
+    // so the user can override this suggested total whenever required.
+    if (name === 'plantCapacity') {
+      const capacity = Number.parseFloat(String(value).replace(/[^0-9.]/g, '')) || 0;
+      setMaterialTotalAmount(capacity > 0 ? String(Math.round(capacity * 60000)) : '');
+    }
   };
 
   const handleMainItemChange = (e) => {
@@ -259,7 +266,7 @@ const CreateQuotation = () => {
             </div>
             <datalist id="brand-list">{BRAND_OPTIONS.map(brand => <option key={brand} value={brand} />)}</datalist>
             <div className="form-grid" style={{ marginTop: 20, alignItems: 'end' }}>
-              <Input label="Total Material Amount (₹) — All Materials Combined" name="materialTotalAmount" type="number" value={materialTotalAmount} onChange={e => setMaterialTotalAmount(e.target.value)} placeholder="Enter total amount of all materials" required />
+              <Input label="Total Material Amount (₹) — All Materials Combined" name="materialTotalAmount" type="number" value={materialTotalAmount} onChange={e => setMaterialTotalAmount(e.target.value)} placeholder="Auto-calculated at ₹60,000 per kW; you can edit this amount" required />
               <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14, color: '#2d3748' }}>GST Rate<select value={materialGstRate} onChange={e => setMaterialGstRate(Number(e.target.value))} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}>{GST_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select></label>
             </div>
             <div className="summary-wrapper"><div className="summary-box">

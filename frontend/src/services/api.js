@@ -27,13 +27,13 @@ API.interceptors.request.use(
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
-    }
+    // Do not clear the login session or force a redirect for every 401.
+    // A quotation update or another protected API can return 401 for a
+    // resource/permission issue; the page should display that API error
+    // instead of unexpectedly logging the user out.
+    //
+    // Keep the current token and let the calling page handle the error.
+    // This prevents an unrelated request from destroying a valid session.
     return Promise.reject(error);
   },
 );
