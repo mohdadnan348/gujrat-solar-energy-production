@@ -23,7 +23,7 @@ const CreateInvoice = () => {
   const [saving, setSaving] = useState(false);
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ customerId: '', quotationId: '', invoiceDate: today, dueDate: today, placeOfSupply: '09- UTTAR PRADESH' });
+  const [form, setForm] = useState({ invoiceNo: '', customerId: '', quotationId: '', invoiceDate: today, dueDate: today, placeOfSupply: '09- UTTAR PRADESH' });
   const [items, setItems] = useState([blankItem()]);
 
   useEffect(() => {
@@ -98,6 +98,7 @@ const CreateInvoice = () => {
     setSaving(true);
     try {
       const payload = {
+        ...(form.invoiceNo.trim() ? { invoiceNo: form.invoiceNo.trim() } : {}),
         customerId: form.customerId,
         ...(form.quotationId ? { quotationId: form.quotationId } : {}),
         invoiceDate: form.invoiceDate,
@@ -134,6 +135,7 @@ const CreateInvoice = () => {
         <section className="form-card">
           <h3 className="section-title">1. Customer & Invoice Details</h3>
           <div className="form-grid">
+            <Input label="Invoice Number (Optional)" name="invoiceNo" value={form.invoiceNo} placeholder="Leave blank for auto number (e.g. INV-0001)" onChange={e => setForm(prev => ({ ...prev, invoiceNo: e.target.value }))} />
             <div>
               <Select label="Select Customer" name="customerId" value={form.customerId} onChange={e => setForm(prev => ({ ...prev, customerId: e.target.value, quotationId: '' }))} options={customerOptions} required />
               <button type="button" className="create-customer-btn" style={{ marginTop: 8 }} onClick={() => setCustomerModalOpen(true)}>+ New Customer</button>

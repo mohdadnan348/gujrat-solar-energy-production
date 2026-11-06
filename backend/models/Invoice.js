@@ -11,7 +11,7 @@ const invoiceItemSchema = new mongoose.Schema({
 });
 
 const invoiceSchema = new mongoose.Schema({
-  invoiceNo: { type: String, unique: true },
+  invoiceNo: { type: String, required: true, unique: true, trim: true, maxlength: 40 },
   customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true },
   quotation: { type: mongoose.Schema.Types.ObjectId, ref: 'Quotation' },
   invoiceDate: { type: Date, required: true },

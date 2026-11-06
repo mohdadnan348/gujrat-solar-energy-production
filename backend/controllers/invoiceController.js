@@ -9,13 +9,24 @@ const round2 = (value) =>
   Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 
 const generateInvoiceNo = async () => {
-  const lastInvoice = await Invoice.findOne({ invoiceNo: /^INV-\d+$/ }).sort({
-    createdAt: -1,
-  });
-  const lastNumber = lastInvoice
-    ? Number(lastInvoice.invoiceNo.split("-")[1])
-    : 0;
-  return `INV-${lastNumber + 1}`;
+  // Find the highest existing INV numeric suffix, not the most recently created record.
+  const invoices = await Invoice.find({ invoiceNo: /^INV-\\d+$/ }).select("invoiceNo").lean();
+  const highest = invoices.reduce((max, item) => {
+    const value = Number(String(item.invoiceNo).split("-")[1]) || 0;
+    return Math.max(max, value);
+  }, 0);
+  return `INV-${String(highest + 1).padStart(4, "0")}`;
+};
+
+const validateInvoiceNo = async (value, excludeId = null) => {
+  const invoiceNo = String(value || "").trim();
+  if (!invoiceNo) throw new Error("Invoice number is required");
+  if (invoiceNo.length > 40) throw new Error("Invoice number cannot exceed 40 characters");
+  const filter = { invoiceNo };
+  if (excludeId) filter._id = { $ne: excludeId };
+  const exists = await Invoice.exists(filter);
+  if (exists) throw new Error("This invoice number already exists. Please enter a different number.");
+  return invoiceNo;
 };
 
 const normalizeItemsAndTotals = (items = []) => {
@@ -116,6 +127,7 @@ const createInvoice = catchAsync(async (req, res) => {
     placeOfSupply,
     items,
     amountInWords,
+    invoiceNo: requestedInvoiceNo,
   } = req.body;
 
   if (!customerId)
@@ -167,8 +179,17 @@ const createInvoice = catchAsync(async (req, res) => {
     return res.status(400).json(new ApiResponse(400, null, error.message));
   }
 
+  let invoiceNo;
+  try {
+    invoiceNo = requestedInvoiceNo
+      ? await validateInvoiceNo(requestedInvoiceNo)
+      : await generateInvoiceNo();
+  } catch (error) {
+    return res.status(400).json(new ApiResponse(400, null, error.message));
+  }
+
   const invoice = await Invoice.create({
-    invoiceNo: await generateInvoiceNo(),
+    invoiceNo,
     customer: customerId,
     quotation: quotationId || undefined,
     invoiceDate,
@@ -247,6 +268,14 @@ const updateInvoice = catchAsync(async (req, res) => {
           "Cannot edit an issued invoice. Cancel and create a new one.",
         ),
       );
+
+  if (req.body.invoiceNo !== undefined) {
+    try {
+      invoice.invoiceNo = await validateInvoiceNo(req.body.invoiceNo, invoice._id);
+    } catch (error) {
+      return res.status(400).json(new ApiResponse(400, null, error.message));
+    }
+  }
 
   const allowed = ["invoiceDate", "dueDate", "placeOfSupply", "amountInWords"];
   allowed.forEach((field) => {

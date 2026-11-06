@@ -23,6 +23,8 @@ const InvoiceView = () => {
   const [invoice, setInvoice] = useState(null);
   const [error, setError] = useState('');
   const [downloading, setDownloading] = useState(false);
+  const [invoiceNoDraft, setInvoiceNoDraft] = useState('');
+  const [savingInvoiceNo, setSavingInvoiceNo] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -30,13 +32,14 @@ const InvoiceView = () => {
     invoiceService
       .getById(id)
       .then((data) => {
-        if (active) setInvoice(data);
+        if (active) {
+          setInvoice(data);
+          setInvoiceNoDraft(data.invoiceNo || '');
+        }
       })
       .catch((err) => {
         if (active) {
-          setError(
-            err.response?.data?.message || 'Unable to load invoice.'
-          );
+          setError(err.response?.data?.message || 'Unable to load invoice.');
         }
       });
 
@@ -44,6 +47,32 @@ const InvoiceView = () => {
       active = false;
     };
   }, [id]);
+
+  const handleSaveInvoiceNo = async () => {
+    const nextInvoiceNo = invoiceNoDraft.trim();
+
+    if (!nextInvoiceNo) {
+      setError('Invoice number is required.');
+      return;
+    }
+
+    setSavingInvoiceNo(true);
+    setError('');
+
+    try {
+      const updated = await invoiceService.update(id, {
+        invoiceNo: nextInvoiceNo,
+      });
+      setInvoice((prev) => ({ ...prev, ...updated }));
+      setInvoiceNoDraft(updated.invoiceNo || nextInvoiceNo);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || 'Unable to update invoice number.'
+      );
+    } finally {
+      setSavingInvoiceNo(false);
+    }
+  };
 
   const handleDownloadPdf = async () => {
     if (downloading) return;
@@ -53,9 +82,6 @@ const InvoiceView = () => {
 
     try {
       const binaryData = await invoiceService.downloadPdf(id);
-
-      // Axios arraybuffer response should be binary. Reject JSON/error payloads
-      // instead of saving a JSON object with a .pdf extension.
       const pdfBlob =
         binaryData instanceof Blob
           ? binaryData
@@ -65,7 +91,9 @@ const InvoiceView = () => {
         throw new Error('Server did not return a valid PDF file.');
       }
 
-      const header = new Uint8Array(await pdfBlob.slice(0, 5).arrayBuffer());
+      const header = new Uint8Array(
+        await pdfBlob.slice(0, 5).arrayBuffer()
+      );
       const signature = String.fromCharCode(...header);
 
       if (signature !== '%PDF-') {
@@ -89,8 +117,6 @@ const InvoiceView = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-
-      // Revoke after the browser has started the download.
       window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     } catch (err) {
       console.error('Invoice PDF download failed:', err);
@@ -102,17 +128,36 @@ const InvoiceView = () => {
 
   const handleDownloadMaterialListPdf = async () => {
     if (downloading) return;
+
     setError('');
     setDownloading(true);
+
     try {
       const binaryData = await invoiceService.downloadMaterialListPdf(id);
-      const pdfBlob = binaryData instanceof Blob ? binaryData : new Blob([binaryData], { type: 'application/pdf' });
-      if (pdfBlob.size < 5) throw new Error('Server did not return a valid PDF file.');
-      const header = new Uint8Array(await pdfBlob.slice(0, 5).arrayBuffer());
-      if (String.fromCharCode(...header) !== '%PDF-') throw new Error('Downloaded file is not a valid PDF.');
+      const pdfBlob =
+        binaryData instanceof Blob
+          ? binaryData
+          : new Blob([binaryData], { type: 'application/pdf' });
+
+      if (pdfBlob.size < 5) {
+        throw new Error('Server did not return a valid PDF file.');
+      }
+
+      const header = new Uint8Array(
+        await pdfBlob.slice(0, 5).arrayBuffer()
+      );
+
+      if (String.fromCharCode(...header) !== '%PDF-') {
+        throw new Error('Downloaded file is not a valid PDF.');
+      }
+
       const url = window.URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
-      const safeInvoiceNo = String(invoice?.invoiceNo || 'invoice').replace(/[^a-z0-9_-]/gi, '-');
+      const safeInvoiceNo = String(invoice?.invoiceNo || 'invoice').replace(
+        /[^a-z0-9_-]/gi,
+        '-'
+      );
+
       link.href = url;
       link.download = `${safeInvoiceNo}-material-list.pdf`;
       document.body.appendChild(link);
@@ -121,12 +166,13 @@ const InvoiceView = () => {
       window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
     } catch (err) {
       setError(err.message || 'Unable to download full material list PDF.');
-    } finally { setDownloading(false); }
+    } finally {
+      setDownloading(false);
+    }
   };
 
   if (error && !invoice) {
-
-  return (
+    return (
       <div className="invoice-view-page">
         <p className="text-danger">{error}</p>
         <button
@@ -166,25 +212,76 @@ const InvoiceView = () => {
           >
             {downloading ? 'Preparing PDF...' : 'Download PDF'}
           </Button>
-          <Button variant="secondary" onClick={handleDownloadMaterialListPdf} disabled={downloading}>
+
+          <Button
+            variant="secondary"
+            onClick={handleDownloadMaterialListPdf}
+            disabled={downloading}
+          >
             {downloading ? 'Preparing...' : 'Download Full Material List'}
           </Button>
         </div>
       </div>
 
-      {error && <p className="text-danger" role="alert">{error}</p>}
+      {error && (
+        <p className="text-danger" role="alert">
+          {error}
+        </p>
+      )}
 
       <div className="invoice-paper">
         <div className="invoice-header">
           <div>
             <h1>INVOICE</h1>
-            <p><strong>Invoice #:</strong> {invoice.invoiceNo}</p>
-            <p><strong>Date:</strong> {fmtDate(invoice.invoiceDate)}</p>
-            <p><strong>Due Date:</strong> {fmtDate(invoice.dueDate)}</p>
+            <p
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                flexWrap: 'wrap',
+              }}
+            >
+              <strong>Invoice #:</strong>
+              {invoice.status === 'Draft' ? (
+                <>
+                  <input
+                    aria-label="Invoice number"
+                    value={invoiceNoDraft}
+                    onChange={(e) => setInvoiceNoDraft(e.target.value)}
+                    maxLength={40}
+                    style={{
+                      width: 180,
+                      padding: '6px 8px',
+                      border: '1px solid #cbd5e0',
+                      borderRadius: 6,
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={handleSaveInvoiceNo}
+                    disabled={savingInvoiceNo}
+                  >
+                    {savingInvoiceNo ? 'Saving...' : 'Save Number'}
+                  </Button>
+                </>
+              ) : (
+                invoice.invoiceNo
+              )}
+            </p>
+            <p>
+              <strong>Date:</strong> {fmtDate(invoice.invoiceDate)}
+            </p>
+            <p>
+              <strong>Due Date:</strong> {fmtDate(invoice.dueDate)}
+            </p>
             {invoice.quotation?.estimateNo && (
-              <p><strong>Quotation:</strong> {invoice.quotation.estimateNo}</p>
+              <p>
+                <strong>Quotation:</strong> {invoice.quotation.estimateNo}
+              </p>
             )}
           </div>
+
           <div className="status-stamp">
             <span>{invoice.status?.toUpperCase()}</span>
           </div>
