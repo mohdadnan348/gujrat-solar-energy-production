@@ -61,6 +61,7 @@ const EditQuotation = () => {
     mainItem: { ...initialMainItem },
     materialTotalAmount: 0,
     materialGstRate: 5,
+    gstType: 'CGST_SGST',
     subTotal: 0,
     gstAmount: 0,
     grandTotal: 0,
@@ -110,6 +111,7 @@ const EditQuotation = () => {
 
           materialTotalAmount: Number(data.materialTotalAmount ?? data.subTotal) || 0,
           materialGstRate: Number(data.materialGstRate ?? 5),
+          gstType: data.gstType || 'CGST_SGST',
           subTotal: Number(data.subTotal) || 0,
           gstAmount: Number(data.gstAmount) || 0,
           grandTotal: Number(data.grandTotal) || 0,
@@ -260,9 +262,12 @@ const EditQuotation = () => {
 
   const totals = useMemo(() => {
     const subTotal = Number(formData.materialTotalAmount) || 0;
-    const gstAmount = Number((subTotal * (Number(formData.materialGstRate) || 0) / 100).toFixed(2));
-    return { subTotal, gstAmount, grandTotal: Number((subTotal + gstAmount).toFixed(2)) };
-  }, [formData.materialTotalAmount, formData.materialGstRate]);
+    const gstAmount = formData.gstType === 'NONE' ? 0 : Number((subTotal * (Number(formData.materialGstRate) || 0) / 100).toFixed(2));
+    const cgstAmount = formData.gstType === 'CGST_SGST' ? Number((gstAmount / 2).toFixed(2)) : 0;
+    const sgstAmount = formData.gstType === 'CGST_SGST' ? Number((gstAmount / 2).toFixed(2)) : 0;
+    const igstAmount = formData.gstType === 'IGST' ? gstAmount : 0;
+    return { subTotal, gstAmount, cgstAmount, sgstAmount, igstAmount, grandTotal: Number((subTotal + gstAmount).toFixed(2)) };
+  }, [formData.materialTotalAmount, formData.materialGstRate, formData.gstType]);
 
 
   // =====================================
@@ -299,6 +304,10 @@ const EditQuotation = () => {
 
         materialTotalAmount: totals.subTotal,
         materialGstRate: Number(formData.materialGstRate),
+        gstType: formData.gstType,
+        cgstAmount: totals.cgstAmount,
+        sgstAmount: totals.sgstAmount,
+        igstAmount: totals.igstAmount,
         subTotal: totals.subTotal,
         gstAmount: totals.gstAmount,
         grandTotal: totals.grandTotal,
@@ -452,13 +461,16 @@ const EditQuotation = () => {
 
             <div>
               <label>Plant Capacity</label>
-              <Input
+              <select
                 name="plantCapacity"
                 value={formData.plantCapacity}
                 onChange={handleInputChange}
                 disabled={!isEditable}
-                placeholder="e.g. 3 KW"
-              />
+                style={{ minHeight: 44, width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}
+              >
+                {!Array.from({ length: 20 }, (_, index) => `${index + 1} KW`).includes(formData.plantCapacity) && formData.plantCapacity && <option value={formData.plantCapacity}>{formData.plantCapacity} (Existing)</option>}
+                {Array.from({ length: 20 }, (_, index) => index + 1).map(kw => <option key={kw} value={`${kw} KW`}>{kw} KW — ₹{(kw * 60000).toLocaleString('en-IN')}</option>)}
+              </select>
             </div>
 
             <div>
@@ -491,9 +503,10 @@ const EditQuotation = () => {
           <h3 className="section-title">2. Combined Material Pricing</h3>
           <div className="form-grid" style={{ alignItems: 'end' }}>
             <Input label="Total Material Amount (₹) — ₹60,000 per kW default, editable" type="number" value={formData.materialTotalAmount} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, materialTotalAmount: e.target.value }))} />
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>GST Rate<select value={formData.materialGstRate} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, materialGstRate: Number(e.target.value) }))} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}>{[0,5,12,18,28].map(rate => <option key={rate} value={rate}>{rate}%</option>)}</select></label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>GST Type<select value={formData.gstType} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, gstType: e.target.value }))} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}><option value="CGST_SGST">CGST + SGST</option><option value="IGST">IGST</option><option value="NONE">No GST</option></select></label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>GST Rate<select value={formData.materialGstRate} disabled={!isEditable || formData.gstType === 'NONE'} onChange={e => setFormData(prev => ({ ...prev, materialGstRate: Number(e.target.value) }))} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}>{[0,5,12,18,28].map(rate => <option key={rate} value={rate}>{rate}%</option>)}</select></label>
           </div>
-          <div className="summary-box"><div className="summary-row"><span>Total Material Amount:</span><strong>₹ {totals.subTotal.toLocaleString('en-IN')}</strong></div><div className="summary-row"><span>GST ({formData.materialGstRate}%):</span><strong>₹ {totals.gstAmount.toLocaleString('en-IN')}</strong></div><div className="summary-row total"><span>Grand Total:</span><strong>₹ {totals.grandTotal.toLocaleString('en-IN')}</strong></div></div>
+          <div className="summary-box"><div className="summary-row"><span>Package Amount:</span><strong>₹ {totals.subTotal.toLocaleString('en-IN')}</strong></div>{formData.gstType === 'CGST_SGST' ? <><div className="summary-row"><span>CGST ({formData.materialGstRate / 2}%):</span><strong>₹ {totals.cgstAmount.toLocaleString('en-IN')}</strong></div><div className="summary-row"><span>SGST ({formData.materialGstRate / 2}%):</span><strong>₹ {totals.sgstAmount.toLocaleString('en-IN')}</strong></div></> : formData.gstType === 'IGST' ? <div className="summary-row"><span>IGST ({formData.materialGstRate}%):</span><strong>₹ {totals.igstAmount.toLocaleString('en-IN')}</strong></div> : <div className="summary-row"><span>GST:</span><strong>₹ 0</strong></div>}<div className="summary-row total"><span>Grand Total:</span><strong>₹ {totals.grandTotal.toLocaleString('en-IN')}</strong></div></div>
           <div style={{ marginTop: 20 }}><Input label="Subsidy Note" name="subsidyAmount" value={formData.subsidyAmount} onChange={handleInputChange} disabled={!isEditable} placeholder="Enter subsidy details" /></div>
         </div>
 

@@ -80,7 +80,8 @@ const CreateQuotation = () => {
   // Summary
   const [materialTotalAmount, setMaterialTotalAmount] = useState('');
   const [materialGstRate, setMaterialGstRate] = useState(5);
-  const [summary, setSummary] = useState({ subTotal: 0, totalGst: 0, grandTotal: 0 });
+  const [gstType, setGstType] = useState('CGST_SGST');
+  const [summary, setSummary] = useState({ subTotal: 0, totalGst: 0, cgstAmount: 0, sgstAmount: 0, igstAmount: 0, grandTotal: 0 });
 
   // Fetch Customers
   const fetchCustomers = async () => {
@@ -101,9 +102,12 @@ const CreateQuotation = () => {
   // One combined material amount and one GST rate for the whole quotation.
   useEffect(() => {
     const subTotal = Number(materialTotalAmount) || 0;
-    const totalGst = subTotal * (Number(materialGstRate) || 0) / 100;
-    setSummary({ subTotal: subTotal.toFixed(2), totalGst: totalGst.toFixed(2), grandTotal: (subTotal + totalGst).toFixed(2) });
-  }, [materialTotalAmount, materialGstRate]);
+    const totalGst = gstType === 'NONE' ? 0 : subTotal * (Number(materialGstRate) || 0) / 100;
+    const cgstAmount = gstType === 'CGST_SGST' ? totalGst / 2 : 0;
+    const sgstAmount = gstType === 'CGST_SGST' ? totalGst / 2 : 0;
+    const igstAmount = gstType === 'IGST' ? totalGst : 0;
+    setSummary({ subTotal: subTotal.toFixed(2), totalGst: totalGst.toFixed(2), cgstAmount: cgstAmount.toFixed(2), sgstAmount: sgstAmount.toFixed(2), igstAmount: igstAmount.toFixed(2), grandTotal: (subTotal + totalGst).toFixed(2) });
+  }, [materialTotalAmount, materialGstRate, gstType]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -165,6 +169,10 @@ const CreateQuotation = () => {
         subsidyAmount: formData.subsidyAmount,
         materialTotalAmount: Number(materialTotalAmount) || 0,
         materialGstRate: Number(materialGstRate),
+        gstType,
+        cgstAmount: Number(summary.cgstAmount),
+        sgstAmount: Number(summary.sgstAmount),
+        igstAmount: Number(summary.igstAmount),
         bom: bomItems.map(({ srNo, itemDescription, qty, unit, brand }) => ({ srNo, itemDescription, qty: Number(qty) || 0, unit, brand })),
         subTotal: parseFloat(summary.subTotal),
         gstAmount: parseFloat(summary.totalGst),
@@ -237,7 +245,7 @@ const CreateQuotation = () => {
               
               <Input label="Lead Name (Cover Page)" name="leadName" value={formData.leadName} onChange={handleInputChange} placeholder="e.g. Mr. Sharma" />
               
-              <Input label="Plant Capacity" name="plantCapacity" value={formData.plantCapacity} onChange={handleInputChange} placeholder="e.g. 3 KW" required />
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14, color: '#2d3748' }}>Plant Capacity<select name="plantCapacity" value={formData.plantCapacity} onChange={handleInputChange} required style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}><option value="">Select Solar Capacity</option>{Array.from({ length: 20 }, (_, index) => index + 1).map(kw => <option key={kw} value={`${kw} KW`}>{kw} KW — ₹{(kw * 60000).toLocaleString('en-IN')}</option>)}</select></label>
               <Input label="Number of Panels" name="panelCount" type="number" value={formData.panelCount} onChange={handleInputChange} placeholder="e.g. 5" required />
             </div>
             <div className="form-grid" style={{ marginTop: '15px' }}>
@@ -267,11 +275,12 @@ const CreateQuotation = () => {
             <datalist id="brand-list">{BRAND_OPTIONS.map(brand => <option key={brand} value={brand} />)}</datalist>
             <div className="form-grid" style={{ marginTop: 20, alignItems: 'end' }}>
               <Input label="Total Material Amount (₹) — All Materials Combined" name="materialTotalAmount" type="number" value={materialTotalAmount} onChange={e => setMaterialTotalAmount(e.target.value)} placeholder="Auto-calculated at ₹60,000 per kW; you can edit this amount" required />
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14, color: '#2d3748' }}>GST Rate<select value={materialGstRate} onChange={e => setMaterialGstRate(Number(e.target.value))} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}>{GST_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select></label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14, color: '#2d3748' }}>GST Type<select value={gstType} onChange={e => setGstType(e.target.value)} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}><option value="CGST_SGST">CGST + SGST</option><option value="IGST">IGST</option><option value="NONE">No GST</option></select></label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14, color: '#2d3748' }}>GST Rate<select value={materialGstRate} onChange={e => setMaterialGstRate(Number(e.target.value))} disabled={gstType === 'NONE'} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}>{GST_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select></label>
             </div>
             <div className="summary-wrapper"><div className="summary-box">
               <div className="summary-row"><span>Total Material Amount:</span><span>₹ {summary.subTotal}</span></div>
-              <div className="summary-row"><span>GST ({materialGstRate}%):</span><span>₹ {summary.totalGst}</span></div>
+              {gstType === 'CGST_SGST' ? <><div className="summary-row"><span>CGST ({materialGstRate / 2}%):</span><span>₹ {summary.cgstAmount}</span></div><div className="summary-row"><span>SGST ({materialGstRate / 2}%):</span><span>₹ {summary.sgstAmount}</span></div></> : gstType === 'IGST' ? <div className="summary-row"><span>IGST ({materialGstRate}%):</span><span>₹ {summary.igstAmount}</span></div> : <div className="summary-row"><span>GST:</span><span>₹ 0.00</span></div>}
               <div className="summary-row total"><span>Grand Total:</span><span>₹ {summary.grandTotal}</span></div>
             </div></div>
           </div>

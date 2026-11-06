@@ -94,13 +94,13 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     const allBranchAddressesHtml = [
       '<strong>HEAD OFFICE:</strong> 83/161-3, PARAMPURWA, JUHI, Juhi Colony Sub Post Office, Juhi Depo, Kanpur Nagar 208014',
       '<strong>MAIN BRANCH:</strong> 131/370 A2, Begampurwa, near Baba Market, Kanpur Nagar 208023',
-      '<strong>AZAMGAGH BRANCH:</strong> Gaordeeh Aaima, near Petrol Pump, Chhatwara Sidhari Road, Kanpur, Uttar Pradesh - 208014',
+      '<strong>AZAMGARH BRANCH:</strong> Gaordeeh Aaima, near Petrol Pump, Chhatwara Sidhari Road, Kanpur, Uttar Pradesh - 208014',
       '<strong>FATEHPUR BRANCH:</strong> Purana Bus Stand, Ram Ganj, Pakka Talab, Fatehpur',
     ].join('<br>');
     const allBranchAddressesText = [
       'HEAD OFFICE: 83/161-3, PARAMPURWA, JUHI, Juhi Colony Sub Post Office, Juhi Depo, Kanpur Nagar 208014',
       'MAIN BRANCH: 131/370 A2, Begampurwa, near Baba Market, Kanpur Nagar 208023',
-      'AZAMGAGH BRANCH: Gaordeeh Aaima, near Petrol Pump, Chhatwara Sidhari Road, Kanpur, Uttar Pradesh - 208014',
+      'AZAMGARH BRANCH: Gaordeeh Aaima, near Petrol Pump, Chhatwara Sidhari Road, Kanpur, Uttar Pradesh - 208014',
       'FATEHPUR BRANCH: Purana Bus Stand, Ram Ganj, Pakka Talab, Fatehpur',
     ].join('\n');
     const companyMobile = settings.mobile || "";
@@ -203,6 +203,11 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     // This change only aligns the displayed information with the reference quotation.
     const subTotal = Number(quotationData.subTotal || 0);
     const gstAmount = Number(quotationData.gstAmount || 0);
+    const gstType = quotationData.gstType || 'CGST_SGST';
+    const cgstAmount = Number(quotationData.cgstAmount ?? (gstType === 'CGST_SGST' ? gstAmount / 2 : 0));
+    const sgstAmount = Number(quotationData.sgstAmount ?? (gstType === 'CGST_SGST' ? gstAmount / 2 : 0));
+    const igstAmount = Number(quotationData.igstAmount ?? (gstType === 'IGST' ? gstAmount : 0));
+    const gstRate = Number(quotationData.materialGstRate || 0);
     const grandTotal = Number(quotationData.grandTotal || 0);
     const bom = Array.isArray(quotationData.bom) ? quotationData.bom : [];
 
@@ -926,7 +931,7 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     <div class="amount-words"><strong>${escapeHtml(amountInWords(grandTotal))}</strong></div>
     <table class="totals">
       <tr><td>Sub Total:</td><td class="right">${formatMoney(subTotal)}</td></tr>
-      <tr><td>Tax (GST):</td><td class="right">${formatMoney(gstAmount)}</td></tr>
+      ${gstType === "CGST_SGST" ? `<tr><td>CGST (${gstRate / 2}%):</td><td class="right">${formatMoney(cgstAmount)}</td></tr><tr><td>SGST (${gstRate / 2}%):</td><td class="right">${formatMoney(sgstAmount)}</td></tr>` : gstType === "IGST" ? `<tr><td>IGST (${gstRate}%):</td><td class="right">${formatMoney(igstAmount)}</td></tr>` : `<tr><td>GST:</td><td class="right">${formatMoney(0)}</td></tr>`}
       <tr><td><strong>Total:</strong></td><td class="right"><strong>${formatMoney(grandTotal)}</strong></td></tr>
     </table>
   </div>
