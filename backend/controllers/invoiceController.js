@@ -184,18 +184,21 @@ const createInvoice = catchAsync(async (req, res) => {
       if (panel < 0 || inverter < 0 || accessories < 0) throw new Error("Solar Panel and Inverter amounts cannot exceed quotation subtotal");
       const gstType = quotation.gstType || "NONE";
       const gstRate = Number(quotation.materialGstRate || 0);
-      const gstAmount = round2(quotation.gstAmount || 0);
-      const cgst = round2(quotation.cgstAmount || 0);
-      const sgst = round2(quotation.sgstAmount || 0);
-      const igst = round2(quotation.igstAmount || 0);
+      const discount = round2(pricingBreakdown?.discount ?? quotation.mainItem?.discount ?? 0);
+      if (discount < 0 || discount > base) throw new Error("Discount cannot exceed quotation subtotal");
+      const taxable = round2(base - discount);
+      const gstAmount = gstType === "NONE" ? 0 : round2(taxable * gstRate / 100);
+      const cgst = gstType === "CGST_SGST" ? round2(gstAmount / 2) : 0;
+      const sgst = gstType === "CGST_SGST" ? round2(gstAmount / 2) : 0;
+      const igst = gstType === "IGST" ? gstAmount : 0;
       const categories = [ ["Solar Panel", panel], ["Inverter", inverter], ["Accessories", accessories] ];
       const normalizedItems = categories.map(([description, value]) => ({ description, rate: value, qty: 1, gstRate, taxableValue: value, taxAmount: 0, amount: value }));
-      calculated = { items: normalizedItems, totals: { taxableAmount: base, totalTax: gstAmount, cgst_2_5:0,sgst_2_5:0,cgst_6:0,sgst_6:0,cgst_9:0,sgst_9:0,cgst_14:0,sgst_14:0, grandTotal: round2(quotation.grandTotal || base + gstAmount), igstAmount: igst } };
+      calculated = { items: normalizedItems, totals: { taxableAmount: taxable, totalTax: gstAmount, cgst_2_5:0,sgst_2_5:0,cgst_6:0,sgst_6:0,cgst_9:0,sgst_9:0,cgst_14:0,sgst_14:0, grandTotal: round2(taxable + gstAmount), igstAmount: igst } };
       if (gstType === "CGST_SGST") {
         const key = gstRate === 5 ? '2_5' : gstRate === 12 ? '6' : gstRate === 18 ? '9' : gstRate === 28 ? '14' : null;
         if (key) { calculated.totals[`cgst_${key}`] = cgst; calculated.totals[`sgst_${key}`] = sgst; }
       }
-      savedBreakdown = { solarPanelAmount: panel, inverterAmount: inverter, accessoriesAmount: accessories, discount: Number(quotation.mainItem?.discount || 0), gstRate, gstType, gstAmount, subTotal: base, source: "QUOTATION" };
+      savedBreakdown = { solarPanelAmount: panel, inverterAmount: inverter, accessoriesAmount: accessories, discount, gstRate, gstType, gstAmount, subTotal: taxable, source: "QUOTATION" };
     } else {
       calculated = normalizeItemsAndTotals(items);
       calculated.items = calculated.items.map(item => ({ ...item, taxAmount: 0, amount: item.taxableValue }));
