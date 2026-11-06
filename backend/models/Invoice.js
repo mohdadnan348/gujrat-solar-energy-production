@@ -24,6 +24,8 @@ const invoiceSchema = new mongoose.Schema({
   cgst_9: { type: Number, default: 0 }, sgst_9: { type: Number, default: 0 },
   cgst_14: { type: Number, default: 0 }, sgst_14: { type: Number, default: 0 },
   totalTax: { type: Number, default: 0 },
+  igstAmount: { type: Number, default: 0 },
+  pricingBreakdown: { solarPanelAmount: { type: Number, default: 0 }, inverterAmount: { type: Number, default: 0 }, accessoriesAmount: { type: Number, default: 0 }, discount: { type: Number, default: 0 }, gstRate: { type: Number, default: 0 }, gstType: { type: String, enum: ['CGST_SGST', 'IGST', 'NONE'], default: 'NONE' }, gstAmount: { type: Number, default: 0 }, subTotal: { type: Number, default: 0 }, source: { type: String, enum: ['QUOTATION', 'STANDALONE'], default: 'STANDALONE' } },
   grandTotal: { type: Number, required: true, min: 0 },
   amountInWords: { type: String },
   paidAmount: { type: Number, default: 0 },

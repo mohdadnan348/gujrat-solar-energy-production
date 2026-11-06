@@ -107,6 +107,7 @@ const buildInvoiceHtml = (invoice, fullMaterialList = false) => {
   const cgst = Number(invoice.cgst_2_5 || 0) + Number(invoice.cgst_6 || 0) + Number(invoice.cgst_9 || 0) + Number(invoice.cgst_14 || 0);
   const sgst = Number(invoice.sgst_2_5 || 0) + Number(invoice.sgst_6 || 0) + Number(invoice.sgst_9 || 0) + Number(invoice.sgst_14 || 0);
   const taxRows = [
+    ['IGST', invoice.igstAmount],
     ['CGST 2.5%', invoice.cgst_2_5], ['SGST 2.5%', invoice.sgst_2_5],
     ['CGST 6.0%', invoice.cgst_6], ['SGST 6.0%', invoice.sgst_6],
     ['CGST 9.0%', invoice.cgst_9], ['SGST 9.0%', invoice.sgst_9],

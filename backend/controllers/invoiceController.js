@@ -128,6 +128,7 @@ const createInvoice = catchAsync(async (req, res) => {
     items,
     amountInWords,
     invoiceNo: requestedInvoiceNo,
+    pricingBreakdown,
   } = req.body;
 
   if (!customerId)
@@ -173,8 +174,43 @@ const createInvoice = catchAsync(async (req, res) => {
   }
 
   let calculated;
+  let savedBreakdown = pricingBreakdown || {};
   try {
-    calculated = normalizeItemsAndTotals(items);
+    if (quotation) {
+      const panel = round2(pricingBreakdown?.solarPanelAmount || 0);
+      const inverter = round2(pricingBreakdown?.inverterAmount || 0);
+      const base = round2(quotation.subTotal ?? quotation.materialTotalAmount ?? 0);
+      const accessories = round2(base - panel - inverter);
+      if (panel < 0 || inverter < 0 || accessories < 0) throw new Error("Solar Panel and Inverter amounts cannot exceed quotation subtotal");
+      const gstType = quotation.gstType || "NONE";
+      const gstRate = Number(quotation.materialGstRate || 0);
+      const gstAmount = round2(quotation.gstAmount || 0);
+      const cgst = round2(quotation.cgstAmount || 0);
+      const sgst = round2(quotation.sgstAmount || 0);
+      const igst = round2(quotation.igstAmount || 0);
+      const categories = [ ["Solar Panel", panel], ["Inverter", inverter], ["Accessories", accessories] ];
+      const normalizedItems = categories.map(([description, value]) => ({ description, rate: value, qty: 1, gstRate, taxableValue: value, taxAmount: 0, amount: value }));
+      calculated = { items: normalizedItems, totals: { taxableAmount: base, totalTax: gstAmount, cgst_2_5:0,sgst_2_5:0,cgst_6:0,sgst_6:0,cgst_9:0,sgst_9:0,cgst_14:0,sgst_14:0, grandTotal: round2(quotation.grandTotal || base + gstAmount), igstAmount: igst } };
+      if (gstType === "CGST_SGST") {
+        const key = gstRate === 5 ? '2_5' : gstRate === 12 ? '6' : gstRate === 18 ? '9' : gstRate === 28 ? '14' : null;
+        if (key) { calculated.totals[`cgst_${key}`] = cgst; calculated.totals[`sgst_${key}`] = sgst; }
+      }
+      savedBreakdown = { solarPanelAmount: panel, inverterAmount: inverter, accessoriesAmount: accessories, discount: Number(quotation.mainItem?.discount || 0), gstRate, gstType, gstAmount, subTotal: base, source: "QUOTATION" };
+    } else {
+      calculated = normalizeItemsAndTotals(items);
+      calculated.items = calculated.items.map(item => ({ ...item, taxAmount: 0, amount: item.taxableValue }));
+      const gstRate = Number(pricingBreakdown?.gstRate || 0);
+      const gstType = pricingBreakdown?.gstType || "NONE";
+      const discount = round2(pricingBreakdown?.discount || 0);
+      const gross = round2(Number(pricingBreakdown?.solarPanelAmount || 0) + Number(pricingBreakdown?.inverterAmount || 0) + Number(pricingBreakdown?.accessoriesAmount || 0));
+      if (![0,5,12,18,28].includes(gstRate) || !["CGST_SGST","IGST","NONE"].includes(gstType) || discount > gross) throw new Error("Invalid standalone invoice discount or GST settings");
+      const taxable = round2(gross - discount); const tax = gstType === "NONE" ? 0 : round2(taxable * gstRate / 100);
+      calculated.totals.taxableAmount = taxable; calculated.totals.totalTax = tax; calculated.totals.grandTotal = round2(taxable + tax);
+      Object.keys(calculated.totals).filter(k=>/^cgst_|^sgst_/.test(k)).forEach(k=>calculated.totals[k]=0);
+      if (gstType === "CGST_SGST") { const key=gstRate===5?'2_5':gstRate===12?'6':gstRate===18?'9':gstRate===28?'14':null; if(key){calculated.totals[`cgst_${key}`]=round2(tax/2);calculated.totals[`sgst_${key}`]=round2(tax/2);} }
+      calculated.totals.igstAmount = gstType === "IGST" ? tax : 0;
+      savedBreakdown = { ...pricingBreakdown, gstAmount: tax, subTotal: taxable, source: "STANDALONE" };
+    }
   } catch (error) {
     return res.status(400).json(new ApiResponse(400, null, error.message));
   }
@@ -197,6 +233,7 @@ const createInvoice = catchAsync(async (req, res) => {
     placeOfSupply,
     items: calculated.items,
     ...calculated.totals,
+    pricingBreakdown: savedBreakdown,
     amountInWords,
     paidAmount: 0,
     status: "Draft",
