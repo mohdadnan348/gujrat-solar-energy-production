@@ -60,8 +60,10 @@ const EditQuotation = () => {
     expiryDate: '',
     mainItem: { ...initialMainItem },
     materialTotalAmount: 0,
-    materialGstRate: 5,
+    materialGstRate: 0,
     gstType: 'CGST_SGST',
+    gstMode: 'EXTRA',
+    perKwAmount: 0,
     subTotal: 0,
     gstAmount: 0,
     grandTotal: 0,
@@ -70,6 +72,7 @@ const EditQuotation = () => {
   });
 
   const [bomItems, setBomItems] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
 
   // =====================================
   // 1. FETCH REAL QUOTATION API
@@ -94,6 +97,7 @@ const EditQuotation = () => {
         setCustomer(data.customer || null);
         setEstimateNo(data.estimateNo || '');
         setStatus(data.status || '');
+        setTestimonials(Array.isArray(data.testimonials) ? data.testimonials : []);
 
         setFormData({
           leadName: data.leadName || '',
@@ -110,8 +114,10 @@ const EditQuotation = () => {
           },
 
           materialTotalAmount: Number(data.materialTotalAmount ?? data.subTotal) || 0,
-          materialGstRate: Number(data.materialGstRate ?? 5),
+          materialGstRate: Number(data.materialGstRate ?? 0),
           gstType: data.gstType || 'CGST_SGST',
+          gstMode: data.gstMode || 'EXTRA',
+          perKwAmount: Number(data.perKwAmount) || 0,
           subTotal: Number(data.subTotal) || 0,
           gstAmount: Number(data.gstAmount) || 0,
           grandTotal: Number(data.grandTotal) || 0,
@@ -174,15 +180,12 @@ const EditQuotation = () => {
       [name]: value
     }));
 
-    // Changing plant capacity suggests ₹60,000 per kW; the total amount
-    // can still be manually overridden in the pricing section.
-    if (name === 'plantCapacity') {
-      const capacity = Number.parseFloat(String(value).replace(/[^0-9.]/g, '')) || 0;
-      setFormData(prev => ({
-        ...prev,
-        plantCapacity: value,
-        materialTotalAmount: capacity > 0 ? Math.round(capacity * 60000) : 0
-      }));
+    if (name === 'plantCapacity' || name === 'perKwAmount') {
+      const capacityText = name === 'plantCapacity' ? value : formData.plantCapacity;
+      const perKwText = name === 'perKwAmount' ? value : formData.perKwAmount;
+      const capacity = Number.parseFloat(String(capacityText).replace(/[^0-9.]/g, '')) || 0;
+      const perKw = Number(perKwText) || 0;
+      if (capacity > 0 && perKw > 0) setFormData(prev => ({ ...prev, [name]: value, materialTotalAmount: Math.round(capacity * perKw) }));
     }
   };
 
@@ -261,13 +264,15 @@ const EditQuotation = () => {
   // =====================================
 
   const totals = useMemo(() => {
-    const subTotal = Number(formData.materialTotalAmount) || 0;
-    const gstAmount = formData.gstType === 'NONE' ? 0 : Number((subTotal * (Number(formData.materialGstRate) || 0) / 100).toFixed(2));
+    const amount = Number(formData.materialTotalAmount) || 0;
+    const rate = Math.max(0, Number(formData.materialGstRate) || 0);
+    const gstAmount = formData.gstType === 'NONE' ? 0 : Number((formData.gstMode === 'INCLUDED' ? amount - amount / (1 + rate / 100) : amount * rate / 100).toFixed(2));
+    const subTotal = formData.gstMode === 'INCLUDED' ? Number((amount - gstAmount).toFixed(2)) : amount;
     const cgstAmount = formData.gstType === 'CGST_SGST' ? Number((gstAmount / 2).toFixed(2)) : 0;
     const sgstAmount = formData.gstType === 'CGST_SGST' ? Number((gstAmount / 2).toFixed(2)) : 0;
     const igstAmount = formData.gstType === 'IGST' ? gstAmount : 0;
-    return { subTotal, gstAmount, cgstAmount, sgstAmount, igstAmount, grandTotal: Number((subTotal + gstAmount).toFixed(2)) };
-  }, [formData.materialTotalAmount, formData.materialGstRate, formData.gstType]);
+    return { subTotal, gstAmount, cgstAmount, sgstAmount, igstAmount, grandTotal: Number((formData.gstMode === 'INCLUDED' ? amount : amount + gstAmount).toFixed(2)) };
+  }, [formData.materialTotalAmount, formData.materialGstRate, formData.gstType, formData.gstMode]);
 
 
   // =====================================
@@ -302,7 +307,10 @@ const EditQuotation = () => {
             Number(formData.mainItem.totalAmountWithTax) || 0
         },
 
-        materialTotalAmount: totals.subTotal,
+        materialTotalAmount: Number(formData.materialTotalAmount) || 0,
+        perKwAmount: Number(formData.perKwAmount) || 0,
+        gstMode: formData.gstMode,
+        testimonials,
         materialGstRate: Number(formData.materialGstRate),
         gstType: formData.gstType,
         cgstAmount: totals.cgstAmount,
@@ -469,7 +477,7 @@ const EditQuotation = () => {
                 style={{ minHeight: 44, width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}
               >
                 {!Array.from({ length: 20 }, (_, index) => `${index + 1} KW`).includes(formData.plantCapacity) && formData.plantCapacity && <option value={formData.plantCapacity}>{formData.plantCapacity} (Existing)</option>}
-                {Array.from({ length: 20 }, (_, index) => index + 1).map(kw => <option key={kw} value={`${kw} KW`}>{kw} KW — ₹{(kw * 60000).toLocaleString('en-IN')}</option>)}
+                {Array.from({ length: 20 }, (_, index) => index + 1).map(kw => <option key={kw} value={`${kw} KW`}>{kw} KW</option>)}
               </select>
             </div>
 
@@ -502,12 +510,24 @@ const EditQuotation = () => {
         <div className="form-card">
           <h3 className="section-title">2. Combined Material Pricing</h3>
           <div className="form-grid" style={{ alignItems: 'end' }}>
-            <Input label="Total Material Amount (₹) — ₹60,000 per kW default, editable" type="number" value={formData.materialTotalAmount} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, materialTotalAmount: e.target.value }))} />
+            <Input label="Amount per KW (₹)" type="number" value={formData.perKwAmount} disabled={!isEditable} onChange={e => handleInputChange({ target: { name: 'perKwAmount', value: e.target.value } })} />
+            <Input label="Total Quotation Amount (₹)" type="number" value={formData.materialTotalAmount} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, materialTotalAmount: e.target.value }))} />
             <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>GST Type<select value={formData.gstType} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, gstType: e.target.value }))} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}><option value="CGST_SGST">CGST + SGST</option><option value="IGST">IGST</option><option value="NONE">No GST</option></select></label>
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>GST Rate<select value={formData.materialGstRate} disabled={!isEditable || formData.gstType === 'NONE'} onChange={e => setFormData(prev => ({ ...prev, materialGstRate: Number(e.target.value) }))} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}>{[0,5,12,18,28].map(rate => <option key={rate} value={rate}>{rate}%</option>)}</select></label>
+            <Input label="GST Percentage (any value)" type="number" min="0" step="any" value={formData.materialGstRate} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, materialGstRate: e.target.value }))} />
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>GST Calculation<select value={formData.gstMode} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, gstMode: e.target.value }))} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}><option value="EXTRA">GST Extra</option><option value="INCLUDED">GST Included in Amount</option></select></label>
           </div>
-          <div className="summary-box"><div className="summary-row"><span>Package Amount:</span><strong>₹ {totals.subTotal.toLocaleString('en-IN')}</strong></div>{formData.gstType === 'CGST_SGST' ? <><div className="summary-row"><span>CGST ({formData.materialGstRate / 2}%):</span><strong>₹ {totals.cgstAmount.toLocaleString('en-IN')}</strong></div><div className="summary-row"><span>SGST ({formData.materialGstRate / 2}%):</span><strong>₹ {totals.sgstAmount.toLocaleString('en-IN')}</strong></div></> : formData.gstType === 'IGST' ? <div className="summary-row"><span>IGST ({formData.materialGstRate}%):</span><strong>₹ {totals.igstAmount.toLocaleString('en-IN')}</strong></div> : <div className="summary-row"><span>GST:</span><strong>₹ 0</strong></div>}<div className="summary-row total"><span>Grand Total:</span><strong>₹ {totals.grandTotal.toLocaleString('en-IN')}</strong></div></div>
+          <div className="summary-box"><div className="summary-row"><span>{formData.gstMode === 'INCLUDED' ? 'Taxable Amount:' : 'Package Amount:'}</span><strong>₹ {totals.subTotal.toLocaleString('en-IN')}</strong></div>{formData.gstType === 'CGST_SGST' ? <><div className="summary-row"><span>CGST ({formData.materialGstRate / 2}%):</span><strong>₹ {totals.cgstAmount.toLocaleString('en-IN')}</strong></div><div className="summary-row"><span>SGST ({formData.materialGstRate / 2}%):</span><strong>₹ {totals.sgstAmount.toLocaleString('en-IN')}</strong></div></> : formData.gstType === 'IGST' ? <div className="summary-row"><span>IGST ({formData.materialGstRate}%):</span><strong>₹ {totals.igstAmount.toLocaleString('en-IN')}</strong></div> : <div className="summary-row"><span>GST:</span><strong>₹ 0</strong></div>}<div className="summary-row total"><span>Grand Total:</span><strong>₹ {totals.grandTotal.toLocaleString('en-IN')}</strong></div></div>
           <div style={{ marginTop: 20 }}><Input label="Subsidy Note" name="subsidyAmount" value={formData.subsidyAmount} onChange={handleInputChange} disabled={!isEditable} placeholder="Enter subsidy details" /></div>
+        </div>
+
+        <div className="form-card">
+          <h3 className="section-title">Testimonials</h3>
+          {testimonials.map((item,index)=><div className="testimonial-editor" key={index}>
+            <Input label={`Customer ${index+1}`} value={item.name || ''} disabled={!isEditable} onChange={e=>setTestimonials(prev=>prev.map((t,i)=>i===index?{...t,name:e.target.value}:t))}/>
+            <label>Testimonial<textarea rows="3" disabled={!isEditable} value={item.text || ''} onChange={e=>setTestimonials(prev=>prev.map((t,i)=>i===index?{...t,text:e.target.value}:t))}/></label>
+            {isEditable && <button type="button" className="remove-btn" onClick={()=>setTestimonials(prev=>prev.filter((_,i)=>i!==index))}>Remove</button>}
+          </div>)}
+          {isEditable && <Button type="button" variant="secondary" onClick={()=>setTestimonials(prev=>[...prev,{name:'',text:'',rating:5}])}>Add Testimonial</Button>}
         </div>
 
         {/* SECTION 3: BOM MATERIAL DETAILS ONLY */}

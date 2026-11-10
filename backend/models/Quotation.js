@@ -43,7 +43,10 @@ const quotationSchema = new mongoose.Schema({
   },
   
   materialTotalAmount: { type: Number, default: 0 },
-  materialGstRate: { type: Number, default: 5 },
+  materialGstRate: { type: Number, default: 0 },
+  perKwAmount: { type: Number, default: 0 },
+  gstMode: { type: String, enum: ['EXTRA', 'INCLUDED'], default: 'EXTRA' },
+  testimonials: [{ name: String, text: String, rating: { type: Number, default: 5 } }],
   gstType: { type: String, enum: ['CGST_SGST', 'IGST', 'NONE'], default: 'CGST_SGST' },
   cgstAmount: { type: Number, default: 0 },
   sgstAmount: { type: Number, default: 0 },

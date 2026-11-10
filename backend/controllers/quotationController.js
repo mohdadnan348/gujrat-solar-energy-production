@@ -39,7 +39,7 @@ const generateEstimateNo = async () => {
 const createQuotation = catchAsync(async (req, res) => {
   const { 
     customerId, leadName, plantCapacity, branch, date, expiryDate, 
-    mainItem, materialTotalAmount, materialGstRate, gstType, subTotal, gstAmount, grandTotal, subsidyAmount, 
+    mainItem, materialTotalAmount, materialGstRate, gstType, gstMode, perKwAmount, testimonials, subTotal, gstAmount, grandTotal, subsidyAmount, 
     bom, termsAndConditions, panelCount 
   } = req.body;
 
@@ -50,18 +50,18 @@ const createQuotation = catchAsync(async (req, res) => {
 
   const estimateNo = await generateEstimateNo();
   const capacityKw = Number.parseFloat(String(plantCapacity || '').replace(/[^0-9.]/g, '')) || 0;
-  // Default package pricing is ₹60,000 per kW. An explicitly entered amount wins.
-  const resolvedMaterialAmount = materialTotalAmount !== undefined && materialTotalAmount !== null && materialTotalAmount !== ''
-    ? Number(materialTotalAmount)
-    : (capacityKw * 60000);
-  const resolvedGstRate = Number(materialGstRate ?? 5);
+  const resolvedPerKwAmount = Math.max(0, Number(perKwAmount) || 0);
+  const resolvedMaterialAmount = materialTotalAmount !== undefined && materialTotalAmount !== null && materialTotalAmount !== '' ? Number(materialTotalAmount) : capacityKw * resolvedPerKwAmount;
+  const resolvedGstRate = Math.max(0, Number(materialGstRate) || 0);
   const resolvedGstType = ['CGST_SGST', 'IGST', 'NONE'].includes(gstType) ? gstType : 'CGST_SGST';
-  const resolvedSubTotal = Number.isFinite(resolvedMaterialAmount) ? resolvedMaterialAmount : 0;
-  const resolvedGstAmount = resolvedGstType === 'NONE' ? 0 : Number((resolvedSubTotal * resolvedGstRate / 100).toFixed(2));
+  const resolvedGstMode = gstMode === 'INCLUDED' ? 'INCLUDED' : 'EXTRA';
+  const enteredAmount = Number.isFinite(resolvedMaterialAmount) ? Math.max(0, resolvedMaterialAmount) : 0;
+  const resolvedGstAmount = resolvedGstType === 'NONE' ? 0 : Number((resolvedGstMode === 'INCLUDED' ? enteredAmount - enteredAmount / (1 + resolvedGstRate / 100) : enteredAmount * resolvedGstRate / 100).toFixed(2));
+  const resolvedSubTotal = resolvedGstMode === 'INCLUDED' ? Number((enteredAmount - resolvedGstAmount).toFixed(2)) : enteredAmount;
   const resolvedCgstAmount = resolvedGstType === 'CGST_SGST' ? Number((resolvedGstAmount / 2).toFixed(2)) : 0;
   const resolvedSgstAmount = resolvedGstType === 'CGST_SGST' ? Number((resolvedGstAmount / 2).toFixed(2)) : 0;
   const resolvedIgstAmount = resolvedGstType === 'IGST' ? resolvedGstAmount : 0;
-  const resolvedGrandTotal = Number((resolvedSubTotal + resolvedGstAmount).toFixed(2));
+  const resolvedGrandTotal = Number((resolvedGstMode === 'INCLUDED' ? enteredAmount : resolvedSubTotal + resolvedGstAmount).toFixed(2));
   const calculatedAmountInWords = amountInWords(resolvedGrandTotal); 
 
   // Use the pre-downloaded image for the exact panel count. Never generate an image.
@@ -93,9 +93,12 @@ const createQuotation = catchAsync(async (req, res) => {
     createdBy: req.user._id,
     ownerHR: req.user.role === 'HR' ? req.user._id : null,
     mainItem,
-    materialTotalAmount: resolvedSubTotal,
+    materialTotalAmount: enteredAmount,
+    perKwAmount: resolvedPerKwAmount,
     materialGstRate: resolvedGstRate,
     gstType: resolvedGstType,
+    gstMode: resolvedGstMode,
+    testimonials: Array.isArray(testimonials) ? testimonials : [],
     cgstAmount: resolvedCgstAmount,
     sgstAmount: resolvedSgstAmount,
     igstAmount: resolvedIgstAmount,
@@ -159,26 +162,23 @@ const updateQuotation = catchAsync(async (req, res) => {
     return res.status(400).json(new ApiResponse(400, null, `Cannot edit a quotation with status: ${quotation.status}`));
   }
 
-  const capacityChanged = req.body.plantCapacity !== undefined && req.body.materialTotalAmount === undefined;
-  if (capacityChanged) {
-    const capacityKw = Number.parseFloat(String(req.body.plantCapacity || '').replace(/[^0-9.]/g, '')) || 0;
-    if (capacityKw > 0) req.body.materialTotalAmount = Math.round(capacityKw * 60000);
-  }
-
-  if (req.body.materialTotalAmount !== undefined || req.body.materialGstRate !== undefined || req.body.gstType !== undefined || capacityChanged) {
-    const amount = Number(req.body.materialTotalAmount ?? quotation.materialTotalAmount ?? quotation.subTotal ?? 0);
-    const gstRate = Number(req.body.materialGstRate ?? quotation.materialGstRate ?? 5);
+  const amountChanged = req.body.materialTotalAmount !== undefined || req.body.materialGstRate !== undefined || req.body.gstType !== undefined || req.body.gstMode !== undefined;
+  if (amountChanged) {
+    const amount = Math.max(0, Number(req.body.materialTotalAmount ?? quotation.materialTotalAmount ?? quotation.subTotal ?? 0));
+    const gstRate = Math.max(0, Number(req.body.materialGstRate ?? quotation.materialGstRate ?? 0));
     const gstType = req.body.gstType ?? quotation.gstType ?? 'CGST_SGST';
-    const gst = gstType === 'NONE' ? 0 : Number((amount * gstRate / 100).toFixed(2));
+    const gstMode = req.body.gstMode ?? quotation.gstMode ?? 'EXTRA';
+    const gst = gstType === 'NONE' ? 0 : Number((gstMode === 'INCLUDED' ? amount - amount / (1 + gstRate / 100) : amount * gstRate / 100).toFixed(2));
     req.body.materialTotalAmount = amount;
     req.body.materialGstRate = gstRate;
     req.body.gstType = gstType;
-    req.body.subTotal = amount;
+    req.body.gstMode = gstMode;
+    req.body.subTotal = gstMode === 'INCLUDED' ? Number((amount - gst).toFixed(2)) : amount;
     req.body.gstAmount = gst;
     req.body.cgstAmount = gstType === 'CGST_SGST' ? Number((gst / 2).toFixed(2)) : 0;
     req.body.sgstAmount = gstType === 'CGST_SGST' ? Number((gst / 2).toFixed(2)) : 0;
     req.body.igstAmount = gstType === 'IGST' ? gst : 0;
-    req.body.grandTotal = Number((amount + gst).toFixed(2));
+    req.body.grandTotal = Number((gstMode === 'INCLUDED' ? amount : amount + gst).toFixed(2));
   }
 
   if (req.body.panelCount !== undefined) {
@@ -209,7 +209,7 @@ const updateQuotation = catchAsync(async (req, res) => {
 
   const allowedUpdates = [
     'leadName', 'plantCapacity', 'branch', 'expiryDate', 'mainItem', 
-    'materialTotalAmount', 'materialGstRate', 'gstType', 'cgstAmount', 'sgstAmount', 'igstAmount', 'subTotal', 'gstAmount', 'grandTotal', 'subsidyAmount', 
+    'materialTotalAmount', 'perKwAmount', 'materialGstRate', 'gstType', 'gstMode', 'testimonials', 'cgstAmount', 'sgstAmount', 'igstAmount', 'subTotal', 'gstAmount', 'grandTotal', 'subsidyAmount', 
     'panelCount', 'roofImageUrl', 'bom', 'termsAndConditions', 'amountInWords'
   ];
   

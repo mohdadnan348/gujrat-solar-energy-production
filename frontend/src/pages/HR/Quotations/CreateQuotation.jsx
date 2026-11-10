@@ -25,13 +25,8 @@ const BRAND_OPTIONS = [
   'Aluminium', 'MCB', 'SPD', 'DCBB', 'ACDB'
 ];
 
-const GST_OPTIONS = [
-  { label: '0%', value: 0 },
-  { label: '5%', value: 5 },
-  { label: '12%', value: 12 },
-  { label: '18%', value: 18 },
-  { label: '28%', value: 28 },
-];
+// GST is intentionally a free numeric input: any percentage is accepted.
+
 
 const CreateQuotation = () => {
   const navigate = useNavigate();
@@ -47,6 +42,7 @@ const CreateQuotation = () => {
     plantCapacity: '',
     panelCount: 5,
     subsidyAmount: '',
+    perKwAmount: '',
     mainItem: {
       description: 'Custom BOM Based Quotation',
       panelDetails: '',
@@ -79,8 +75,24 @@ const CreateQuotation = () => {
 
   // Summary
   const [materialTotalAmount, setMaterialTotalAmount] = useState('');
-  const [materialGstRate, setMaterialGstRate] = useState(5);
+  const [materialGstRate, setMaterialGstRate] = useState('');
   const [gstType, setGstType] = useState('CGST_SGST');
+  const [gstMode, setGstMode] = useState('EXTRA');
+  const [termsAndConditions, setTermsAndConditions] = useState({
+    generalTerms: 'Material dispatch and installation shall start upon DISCOM approval. Customer should clean solar panels regularly.',
+    governmentSubsidy: 'Applicable subsidy will be credited directly to the customer account, subject to government rules.',
+    panelWarranty: '12 years (editable for each quotation).',
+    inverterWarranty: '5 years (editable for each quotation).',
+    batteryWarranty: '8 years (editable for each quotation).',
+    bosWarranty: '12 months from commissioning.',
+    maintenanceWarranty: '5 years O&M support.',
+    warrantyNotes: '', siteCompletionSchedule: '', paymentTerms: '', warrantyExclusions: '', scopeOfWork: ''
+  });
+  const [testimonials, setTestimonials] = useState([
+    { name: 'Rahulbhai Patel', text: 'Extremely satisfied with our rooftop solar power plant and professional installation.', rating: 5 },
+    { name: 'Payalben Hirpara', text: 'The product quality and complete experience were excellent.', rating: 5 },
+    { name: 'Happy Customer', text: 'The team guided us at every step and made the process simple.', rating: 5 }
+  ]);
   const [summary, setSummary] = useState({ subTotal: 0, totalGst: 0, cgstAmount: 0, sgstAmount: 0, igstAmount: 0, grandTotal: 0 });
 
   // Fetch Customers
@@ -101,23 +113,29 @@ const CreateQuotation = () => {
 
   // One combined material amount and one GST rate for the whole quotation.
   useEffect(() => {
-    const subTotal = Number(materialTotalAmount) || 0;
-    const totalGst = gstType === 'NONE' ? 0 : subTotal * (Number(materialGstRate) || 0) / 100;
+    const enteredAmount = Number(materialTotalAmount) || 0;
+    const rate = Math.max(0, Number(materialGstRate) || 0);
+    const gst = gstType === 'NONE' ? 0 : (gstMode === 'INCLUDED' ? enteredAmount - (enteredAmount / (1 + rate / 100)) : enteredAmount * rate / 100);
+    const taxable = gstMode === 'INCLUDED' ? enteredAmount - gst : enteredAmount;
+    const totalGst = Number(gst.toFixed(2));
     const cgstAmount = gstType === 'CGST_SGST' ? totalGst / 2 : 0;
     const sgstAmount = gstType === 'CGST_SGST' ? totalGst / 2 : 0;
     const igstAmount = gstType === 'IGST' ? totalGst : 0;
-    setSummary({ subTotal: subTotal.toFixed(2), totalGst: totalGst.toFixed(2), cgstAmount: cgstAmount.toFixed(2), sgstAmount: sgstAmount.toFixed(2), igstAmount: igstAmount.toFixed(2), grandTotal: (subTotal + totalGst).toFixed(2) });
-  }, [materialTotalAmount, materialGstRate, gstType]);
+    setSummary({ subTotal: taxable.toFixed(2), enteredAmount: enteredAmount.toFixed(2), totalGst: totalGst.toFixed(2), cgstAmount: cgstAmount.toFixed(2), sgstAmount: sgstAmount.toFixed(2), igstAmount: igstAmount.toFixed(2), grandTotal: (gstMode === 'INCLUDED' ? enteredAmount : enteredAmount + totalGst).toFixed(2) });
+  }, [materialTotalAmount, materialGstRate, gstType, gstMode]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
 
-    // Default quotation amount: ₹60,000 per kW. The amount field remains editable,
-    // so the user can override this suggested total whenever required.
     if (name === 'plantCapacity') {
       const capacity = Number.parseFloat(String(value).replace(/[^0-9.]/g, '')) || 0;
-      setMaterialTotalAmount(capacity > 0 ? String(Math.round(capacity * 60000)) : '');
+      const perKw = Number(formData.perKwAmount) || 0;
+      setMaterialTotalAmount(capacity > 0 && perKw > 0 ? String(Math.round(capacity * perKw)) : '');
+    }
+    if (name === 'perKwAmount') {
+      const capacity = Number.parseFloat(String(formData.plantCapacity).replace(/[^0-9.]/g, '')) || 0;
+      setMaterialTotalAmount(capacity > 0 && Number(value) > 0 ? String(Math.round(capacity * Number(value))) : '');
     }
   };
 
@@ -167,9 +185,13 @@ const CreateQuotation = () => {
         plantCapacity: formData.plantCapacity,
         panelCount: parseInt(formData.panelCount),
         subsidyAmount: formData.subsidyAmount,
+        perKwAmount: Number(formData.perKwAmount) || 0,
         materialTotalAmount: Number(materialTotalAmount) || 0,
-        materialGstRate: Number(materialGstRate),
+        materialGstRate: Number(materialGstRate) || 0,
         gstType,
+        gstMode,
+        termsAndConditions,
+        testimonials,
         cgstAmount: Number(summary.cgstAmount),
         sgstAmount: Number(summary.sgstAmount),
         igstAmount: Number(summary.igstAmount),
@@ -245,10 +267,11 @@ const CreateQuotation = () => {
               
               <Input label="Lead Name (Cover Page)" name="leadName" value={formData.leadName} onChange={handleInputChange} placeholder="e.g. Mr. Sharma" />
               
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14, color: '#2d3748' }}>Plant Capacity<select name="plantCapacity" value={formData.plantCapacity} onChange={handleInputChange} required style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}><option value="">Select Solar Capacity</option>{Array.from({ length: 20 }, (_, index) => index + 1).map(kw => <option key={kw} value={`${kw} KW`}>{kw} KW — ₹{(kw * 60000).toLocaleString('en-IN')}</option>)}</select></label>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14, color: '#2d3748' }}>Plant Capacity<select name="plantCapacity" value={formData.plantCapacity} onChange={handleInputChange} required style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}><option value="">Select Solar Capacity</option>{Array.from({ length: 20 }, (_, index) => index + 1).map(kw => <option key={kw} value={`${kw} KW`}>{kw} KW</option>)}</select></label>
               <Input label="Number of Panels" name="panelCount" type="number" value={formData.panelCount} onChange={handleInputChange} placeholder="e.g. 5" required />
             </div>
             <div className="form-grid" style={{ marginTop: '15px' }}>
+              <Input label="Amount per KW (₹)" name="perKwAmount" type="number" value={formData.perKwAmount} onChange={handleInputChange} placeholder="Enter rate per KW (optional)" />
               <Input label="Subsidy Note" name="subsidyAmount" value={formData.subsidyAmount} onChange={handleInputChange} placeholder="e.g. 108,000 Subsidy will be credited..." />
             </div>
           </div>
@@ -274,15 +297,38 @@ const CreateQuotation = () => {
             </div>
             <datalist id="brand-list">{BRAND_OPTIONS.map(brand => <option key={brand} value={brand} />)}</datalist>
             <div className="form-grid" style={{ marginTop: 20, alignItems: 'end' }}>
-              <Input label="Total Material Amount (₹) — All Materials Combined" name="materialTotalAmount" type="number" value={materialTotalAmount} onChange={e => setMaterialTotalAmount(e.target.value)} placeholder="Auto-calculated at ₹60,000 per kW; you can edit this amount" required />
+              <Input label="Quotation Amount (₹)" name="materialTotalAmount" type="number" value={materialTotalAmount} onChange={e => setMaterialTotalAmount(e.target.value)} placeholder="Enter total amount" required />
               <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14, color: '#2d3748' }}>GST Type<select value={gstType} onChange={e => setGstType(e.target.value)} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}><option value="CGST_SGST">CGST + SGST</option><option value="IGST">IGST</option><option value="NONE">No GST</option></select></label>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14, color: '#2d3748' }}>GST Rate<select value={materialGstRate} onChange={e => setMaterialGstRate(Number(e.target.value))} disabled={gstType === 'NONE'} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}>{GST_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}</select></label>
+              <Input label="GST Percentage (any value)" type="number" min="0" step="any" value={materialGstRate} onChange={e => setMaterialGstRate(e.target.value)} placeholder="Enter GST %, e.g. 8.5" />
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14, color: '#2d3748' }}>GST Calculation<select value={gstMode} onChange={e => setGstMode(e.target.value)} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}><option value="EXTRA">GST Extra</option><option value="INCLUDED">GST Included in Amount</option></select></label>
             </div>
             <div className="summary-wrapper"><div className="summary-box">
-              <div className="summary-row"><span>Total Material Amount:</span><span>₹ {summary.subTotal}</span></div>
-              {gstType === 'CGST_SGST' ? <><div className="summary-row"><span>CGST ({materialGstRate / 2}%):</span><span>₹ {summary.cgstAmount}</span></div><div className="summary-row"><span>SGST ({materialGstRate / 2}%):</span><span>₹ {summary.sgstAmount}</span></div></> : gstType === 'IGST' ? <div className="summary-row"><span>IGST ({materialGstRate}%):</span><span>₹ {summary.igstAmount}</span></div> : <div className="summary-row"><span>GST:</span><span>₹ 0.00</span></div>}
+              <div className="summary-row"><span>{gstMode === 'INCLUDED' ? 'Taxable Amount:' : 'Amount:'}</span><span>₹ {summary.subTotal}</span></div>
+              <div className="summary-row"><span>GST ({materialGstRate || 0}%):</span><span>₹ {summary.totalGst}</span></div>
               <div className="summary-row total"><span>Grand Total:</span><span>₹ {summary.grandTotal}</span></div>
             </div></div>
+          </div>
+
+          <div className="form-card">
+            <h3 className="section-title">3. Warranty Terms</h3>
+            {['panelWarranty','inverterWarranty','batteryWarranty','bosWarranty','maintenanceWarranty','warrantyNotes'].map(key => <label key={key} className="quotation-edit-field"><span>{key.replace(/([A-Z])/g, ' $1')}</span><textarea rows="3" value={termsAndConditions[key] || ''} onChange={e => setTermsAndConditions(prev => ({...prev,[key]:e.target.value}))} /></label>)}
+          </div>
+          <div className="form-card">
+            <h3 className="section-title">4. Terms & Conditions</h3>
+            {['generalTerms','governmentSubsidy','siteCompletionSchedule','paymentTerms','warrantyExclusions','scopeOfWork'].map(key => <label key={key} className="quotation-edit-field"><span>{key.replace(/([A-Z])/g, ' $1')}</span><textarea rows="4" value={termsAndConditions[key] || ''} onChange={e => setTermsAndConditions(prev => ({...prev,[key]:e.target.value}))} /></label>)}
+          </div>
+          <div className="form-card">
+            <h3 className="section-title">5. Testimonials</h3>
+            {testimonials.map((item,index) => <div key={index} className="testimonial-editor"><Input label={`Customer ${index+1}`} value={item.name} onChange={e => setTestimonials(prev => prev.map((t,i)=>i===index?{...t,name:e.target.value}:t))}/><label>Testimonial<textarea rows="3" value={item.text} onChange={e=>setTestimonials(prev=>prev.map((t,i)=>i===index?{...t,text:e.target.value}:t))}/></label></div>)}
+            <Button type="button" variant="secondary" onClick={()=>setTestimonials(prev=>[...prev,{name:'',text:'',rating:5}])}>Add Testimonial</Button>
+          </div>
+          <div className="form-card quotation-live-preview">
+            <h3 className="section-title">6. Live Quotation Preview</h3>
+            <h4>Customer & System Details</h4><p>Capacity: {formData.plantCapacity || '—'} | Panels: {formData.panelCount || '—'} | Lead: {formData.leadName || '—'}</p>
+            <h4>Bill of Material</h4><table className="bom-table"><thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Brand</th></tr></thead><tbody>{bomItems.map((item,i)=><tr key={i}><td>{item.itemDescription}</td><td>{item.qty}</td><td>{item.unit}</td><td>{item.brand}</td></tr>)}</tbody></table>
+            <h4>Pricing</h4><p>Amount: ₹{summary.enteredAmount || '0.00'} | GST: ₹{summary.totalGst} | Total: ₹{summary.grandTotal}</p>
+            <h4>Warranty Terms</h4>{['panelWarranty','inverterWarranty','batteryWarranty','bosWarranty','maintenanceWarranty','warrantyNotes'].map(key=><p key={key}><strong>{key}:</strong> {termsAndConditions[key]}</p>)}<h4>Terms & Conditions</h4>{['generalTerms','governmentSubsidy','siteCompletionSchedule','paymentTerms','warrantyExclusions','scopeOfWork'].map(key=><p key={key}><strong>{key}:</strong> {termsAndConditions[key]}</p>)}<h4>Contact / Closing Page</h4><p>Company contact and thank-you page will be included in the downloaded quotation.</p>
+            <h4>Testimonials</h4>{testimonials.map((t,i)=><p key={i}><strong>{t.name || 'Customer'}:</strong> {t.text}</p>)}
           </div>
 
         </form>

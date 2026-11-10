@@ -932,7 +932,7 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     <table class="totals">
       <tr><td>Sub Total:</td><td class="right">${formatMoney(subTotal)}</td></tr>
       ${gstType === "CGST_SGST" ? `<tr><td>CGST (${gstRate / 2}%):</td><td class="right">${formatMoney(cgstAmount)}</td></tr><tr><td>SGST (${gstRate / 2}%):</td><td class="right">${formatMoney(sgstAmount)}</td></tr>` : gstType === "IGST" ? `<tr><td>IGST (${gstRate}%):</td><td class="right">${formatMoney(igstAmount)}</td></tr>` : `<tr><td>GST:</td><td class="right">${formatMoney(0)}</td></tr>`}
-      <tr><td><strong>Total:</strong></td><td class="right"><strong>${formatMoney(grandTotal)}</strong></td></tr>
+      <tr><td><strong>Total${quotationData.gstMode === "INCLUDED" ? " (GST Included)" : ""}:</strong></td><td class="right"><strong>${formatMoney(grandTotal)}</strong></td></tr>
     </table>
   </div>
 
@@ -1082,35 +1082,12 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     <div class="company-meta">GSTIN: ${escapeHtml(gstin)}</div>
   </div>
   <h1 class="page-title" style="color:#222">Testimonials</h1>
-  <div class="testimonial">
-    ${imageTag(testimonial1, "", "Customer testimonial")}
-    <div class="review">
-      “Extremely satisfied with our rooftop solar power plant! The team explained the complete process clearly, installation was smooth and professional, and the work was completed on time. We are happy with the quality of the system and the support provided by Gujarat Solar Energy.”
-      <br><strong>- Rahulbhai Patel</strong><div class="stars">★★★★★</div>
-    </div>
-  </div>
-  <div class="testimonial">
-    ${imageTag(testimonial2, "", "Customer testimonial")}
-    <div class="review">
-      “Switching to solar has been one of the best decisions for our home. We really appreciate the product quality, neat workmanship, and the team's attention to detail. The entire experience was well organised, and all our questions were answered patiently.”
-      <br><strong>- Payalben Hirpara</strong><div class="stars">★★★★★</div>
-    </div>
-  </div>
-  <div class="testimonial">
-    ${imageTag(testimonial3, "", "Customer testimonial")}
-    <div class="review">
-      “Why leave your rooftop unused when it can help you save on electricity? Thank you, Gujarat Solar Energy, for the end-to-end guidance and smooth installation. The team supported us at every step and made the process simple and convenient.”
-      <br><strong>- Happy Customer</strong><div class="stars">★★★★★</div>
-    </div>
-  </div>
-  <div class="footer"><span>${escapeHtml(companyName)}</span><span>8/9</span><span class="social-icons" aria-label="Social and contact links">
-        <span class="social-icon facebook" title="Facebook">f</span>
-        <span class="social-icon instagram" title="Instagram">◎</span>
-        <span class="social-icon linkedin" title="LinkedIn">in</span>
-        <span class="social-icon phone" title="Phone">☎</span>
-        <span class="social-icon email" title="Email">✉</span>
-        <span class="social-icon whatsapp" title="WhatsApp">◉</span>
-      </span></div>
+  ${(Array.isArray(quotationData.testimonials) && quotationData.testimonials.length ? quotationData.testimonials : [
+    { name: 'Rahulbhai Patel', text: 'Extremely satisfied with our rooftop solar power plant! The team explained the complete process clearly, installation was smooth and professional.', rating: 5 },
+    { name: 'Payalben Hirpara', text: 'Switching to solar has been one of the best decisions for our home. We appreciate the product quality and neat workmanship.', rating: 5 },
+    { name: 'Happy Customer', text: 'Thank you for the end-to-end guidance and smooth installation. The team supported us at every step.', rating: 5 }
+  ]).map((item, index) => `<div class="testimonial">${imageTag([testimonial1, testimonial2, testimonial3][index % 3], "", "Customer testimonial")}<div class="review">“${escapeHtml(item.text || '')}”<br><strong>- ${escapeHtml(item.name || 'Customer')}</strong><div class="stars">${'★'.repeat(Math.min(5, Math.max(0, Number(item.rating) || 5)))}</div></div></div>`).join('')}
+  <div class="footer"><span>${escapeHtml(companyName)}</span><span>8/9</span><span class="social-icons" aria-label="Social and contact links"><span class="social-icon facebook">f</span><span class="social-icon instagram">◎</span><span class="social-icon linkedin">in</span><span class="social-icon phone">☎</span><span class="social-icon email">✉</span><span class="social-icon whatsapp">◉</span></span></div>
 </section>
 
 <!-- PAGE 9: CONTACT -->
