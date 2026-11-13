@@ -27,6 +27,9 @@ const quotationSchema = new mongoose.Schema({
   leadName: { type: String },
   branch: { type: String, enum: ['HEAD_OFFICE', 'MAIN_BRANCH', 'AZAMGAGH_BRANCH', 'FATEHPUR_BRANCH'], default: 'HEAD_OFFICE' },
   plantCapacity: { type: String },
+  customerCategory: { type: String, enum: ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL'], default: 'RESIDENTIAL' },
+  systemType: { type: String, enum: ['ON_GRID', 'OFF_GRID', 'HYBRID'], default: 'ON_GRID' },
+  batteryIncluded: { type: Boolean, default: false },
   
   date: { type: Date, default: Date.now },
   expiryDate: { type: Date },

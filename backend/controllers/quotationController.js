@@ -38,7 +38,7 @@ const generateEstimateNo = async () => {
 // @access  Private (Admin only)
 const createQuotation = catchAsync(async (req, res) => {
   const { 
-    customerId, leadName, plantCapacity, branch, date, expiryDate, 
+    customerId, leadName, plantCapacity, customerCategory, systemType, batteryIncluded, branch, date, expiryDate, 
     mainItem, materialTotalAmount, materialGstRate, gstType, gstMode, perKwAmount, testimonials, subTotal, gstAmount, grandTotal, subsidyAmount, 
     bom, termsAndConditions, panelCount 
   } = req.body;
@@ -50,8 +50,10 @@ const createQuotation = catchAsync(async (req, res) => {
 
   const estimateNo = await generateEstimateNo();
   const capacityKw = Number.parseFloat(String(plantCapacity || '').replace(/[^0-9.]/g, '')) || 0;
+  if (capacityKw <= 0 || capacityKw > 20) return res.status(400).json(new ApiResponse(400, null, 'Plant capacity must be between 0 and 20 KW'));
+  if (materialTotalAmount === undefined || materialTotalAmount === null || materialTotalAmount === '' || Number(materialTotalAmount) <= 0) return res.status(400).json(new ApiResponse(400, null, 'Quotation amount must be entered manually'));
   const resolvedPerKwAmount = Math.max(0, Number(perKwAmount) || 0);
-  const resolvedMaterialAmount = materialTotalAmount !== undefined && materialTotalAmount !== null && materialTotalAmount !== '' ? Number(materialTotalAmount) : capacityKw * resolvedPerKwAmount;
+  const resolvedMaterialAmount = Number(materialTotalAmount);
   const resolvedGstRate = Math.max(0, Number(materialGstRate) || 0);
   const resolvedGstType = ['CGST_SGST', 'IGST', 'NONE'].includes(gstType) ? gstType : 'CGST_SGST';
   const resolvedGstMode = gstMode === 'INCLUDED' ? 'INCLUDED' : 'EXTRA';
@@ -87,6 +89,9 @@ const createQuotation = catchAsync(async (req, res) => {
     customer: customerId,
     leadName,
     plantCapacity,
+    customerCategory: ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL'].includes(customerCategory) ? customerCategory : 'RESIDENTIAL',
+    systemType: ['ON_GRID', 'OFF_GRID', 'HYBRID'].includes(systemType) ? systemType : 'ON_GRID',
+    batteryIncluded: systemType === 'ON_GRID' ? Boolean(batteryIncluded) : true,
     branch: branch || 'HEAD_OFFICE',
     date: date || Date.now(),
     expiryDate,
@@ -105,7 +110,7 @@ const createQuotation = catchAsync(async (req, res) => {
     subTotal: resolvedSubTotal,
     gstAmount: resolvedGstAmount,
     grandTotal: resolvedGrandTotal,
-    subsidyAmount,
+    subsidyAmount: customerCategory === 'RESIDENTIAL' && systemType !== 'OFF_GRID' ? subsidyAmount : '',
     amountInWords: calculatedAmountInWords,
     panelCount,
     roofImageUrl,
@@ -162,6 +167,13 @@ const updateQuotation = catchAsync(async (req, res) => {
     return res.status(400).json(new ApiResponse(400, null, `Cannot edit a quotation with status: ${quotation.status}`));
   }
 
+  if (req.body.plantCapacity !== undefined) { const kw = Number.parseFloat(String(req.body.plantCapacity).replace(/[^0-9.]/g, '')) || 0; if (kw <= 0 || kw > 20) return res.status(400).json(new ApiResponse(400, null, 'Plant capacity must be between 0 and 20 KW')); }
+  if (req.body.materialTotalAmount !== undefined && Number(req.body.materialTotalAmount) <= 0) return res.status(400).json(new ApiResponse(400, null, 'Quotation amount must be entered manually'));
+  if (req.body.customerCategory !== undefined) quotation.customerCategory = req.body.customerCategory;
+  if (req.body.systemType !== undefined) quotation.systemType = req.body.systemType;
+  if (req.body.systemType !== undefined) quotation.batteryIncluded = req.body.systemType !== 'ON_GRID';
+  if ((req.body.customerCategory ?? quotation.customerCategory) !== 'RESIDENTIAL' || (req.body.systemType ?? quotation.systemType) === 'OFF_GRID') req.body.subsidyAmount = '';
+
   const amountChanged = req.body.materialTotalAmount !== undefined || req.body.materialGstRate !== undefined || req.body.gstType !== undefined || req.body.gstMode !== undefined;
   if (amountChanged) {
     const amount = Math.max(0, Number(req.body.materialTotalAmount ?? quotation.materialTotalAmount ?? quotation.subTotal ?? 0));
@@ -208,7 +220,7 @@ const updateQuotation = catchAsync(async (req, res) => {
   }
 
   const allowedUpdates = [
-    'leadName', 'plantCapacity', 'branch', 'expiryDate', 'mainItem', 
+    'leadName', 'plantCapacity', 'customerCategory', 'systemType', 'batteryIncluded', 'branch', 'expiryDate', 'mainItem', 
     'materialTotalAmount', 'perKwAmount', 'materialGstRate', 'gstType', 'gstMode', 'testimonials', 'cgstAmount', 'sgstAmount', 'igstAmount', 'subTotal', 'gstAmount', 'grandTotal', 'subsidyAmount', 
     'panelCount', 'roofImageUrl', 'bom', 'termsAndConditions', 'amountInWords'
   ];
