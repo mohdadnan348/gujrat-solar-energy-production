@@ -16,18 +16,57 @@ import quotationService from '../../../services/quotationService';
 import './EditQuotation.css';
 
 const DEFAULT_TERMS_AND_CONDITIONS = {
-  "generalTerms": "Material dispatch and Installation shall be started upon DISCOM approval only.\nFor better performance, solar panels should be cleaned by customer two times in a week.\nConcealed wiring shall be done by company, if possible only. Otherwise, customer should do concealed wiring with their wiremen where material shall be provided by Company.\nAfter successful installation, Customer shall take care of solar plant by doing timely cleaning. If we found less generation at the time of attending complaint due to non-cleaning, we may charge you additional service charge.\nThere is manufacturing warranty for all electronics equipment. Company will help to claim this warranty if require.",
-  "governmentSubsidy": "Subsidy Credit: If applicable, any subsidy will be directly credited to the customer's account. Our company will handle all necessary documentation with the government.\nDelay Disclaimer: Please note that subsidy amounts may experience delays from the government's side. Our company is not liable to compensate for any delays or non-receipt of subsidies if not provided by the government.",
-  "panelWarranty": "90% of rated capacity for the first 15 years.\n80% of rated capacity for the next 15 years.\nTotal Panel Life: 30 years.\nRefer Solar Panel Datasheet for detailed warranty terms.",
-  "inverterWarranty": "12 years, extendable.\nRefer Inverter Datasheet for detailed warranty terms.",
-  "batteryWarranty": "8 years, Extendable.\nRefer Battery Datasheet for detailed warranty terms.",
-  "bosWarranty": "Equipment/products supplied by us which are warranted against defects due to poor material, design, or workmanship.\nThis warranty is valid for 12 months from the date of commissioning or when put into service, whichever is earlier.",
-  "maintenanceWarranty": "We offer 5 years of O&M support, including fault finding, remote monitoring, site visits, and assistance with warranty claims for components.\nO&M does not include solar panel cleaning and washing.",
-  "warrantyNotes": "All warranties provided by the manufacturer/supplier are in favor of the buyer and cover the equipment for the specified period.\nWarranties ensure safe working of individual components and vary in validity period.\nWarranties do not cover damages caused by external hazardous conditions.",
-  "siteCompletionSchedule": "Dispatch within 6 weeks after order confirmation with payment.\nThe entire power plant will be installed and commissioned within 60-70 days (approx.) after project accreditation, contract agreement, and possession of the site.",
-  "paymentTerms": "50% advance payment upon contract signing.\n40% upon delivery of structure material.\n10% before meter installation is complete.",
-  "warrantyExclusions": "Damage or defect caused by transportation, accident, misuse, lack of maintenance, improper usage, or negligence by the owner.\nWilful damage, normal wear and tear, abuse, or misuse of equipment/product.\nDamage or defect caused by Force Majeure events, including fire, earthquake, flood, or other natural disasters.\nDamage or defect caused by unauthorized alterations, modifications, or conversions.\nRepairs carried out by personnel not authorized by the contractor.\nDefects or damages due to external causes.\nParts and components repaired or replaced during the warranty period are warranted only for the original warranty period. The contractor will take back replaced or defective material.",
-  "scopeOfWork": "Providing access/approach to rooftop.\nIf any electrical modification is required from DISCOM (i.e. ELCB, changeover switch etc.) Customer shall provide necessary support.\nProvide necessary documents for project approvals from State/Central Government.\nSite clearance, ladders, water, and electricity supply for smooth installation and commissioning of the project.\nCustomer shall provide Safe Place for Material unloading and storage during the work execution.\nNet meter / Smart meter charge in your scope."
+  generalTerms: `Material dispatch and Installation shall be started upon DISCOM approval only.
+For better performance, solar panels should be cleaned by customer two times in a week.
+Concealed wiring shall be done by company, if possible only. Otherwise, customer should do concealed wiring with their wiremen where material shall be provided by Company.
+After successful installation, Customer shall take care of solar plant by doing timely cleaning. If we found less generation at the time of attending complaint due to non-cleaning, we may charge you additional service charge.
+There is manufacturing warranty for all electronics equipment. Company will help to claim this warranty if require.`,
+
+  governmentSubsidy: `Subsidy Credit: If applicable, any subsidy will be directly credited to the customer's account. Our company will handle all necessary documentation with the government.
+Delay Disclaimer: Please note that subsidy amounts may experience delays from the government's side. Our company is not liable to compensate for any delays or non-receipt of subsidies if not provided by the government.`,
+
+  panelWarranty: `90% of rated capacity for the first 15 years.
+80% of rated capacity for the next 15 years.
+Total Panel Life: 30 years.
+Refer Solar Panel Datasheet for detailed warranty terms.`,
+
+  inverterWarranty: `12 years, extendable.
+Refer Inverter Datasheet for detailed warranty terms.`,
+
+  batteryWarranty: `8 years, Extendable.
+Refer Battery Datasheet for detailed warranty terms.`,
+
+  bosWarranty: `Equipment/products supplied by us which are warranted against defects due to poor material, design, or workmanship.
+This warranty is valid for 12 months from the date of commissioning or when put into service, whichever is earlier.`,
+
+  maintenanceWarranty: `We offer 5 years of O&M support, including fault finding, remote monitoring, site visits, and assistance with warranty claims for components.
+O&M does not include solar panel cleaning and washing.`,
+
+  warrantyNotes: `All warranties provided by the manufacturer/supplier are in favor of the buyer and cover the equipment for the specified period.
+Warranties ensure safe working of individual components and vary in validity period.
+Warranties do not cover damages caused by external hazardous conditions.`,
+
+  siteCompletionSchedule: `Dispatch within 6 weeks after order confirmation with payment.
+The entire power plant will be installed and commissioned within 60-70 days (approx.) after project accreditation, contract agreement, and possession of the site.`,
+
+  paymentTerms: `50% advance payment upon contract signing.
+40% upon delivery of structure material.
+10% before meter installation is complete.`,
+
+  warrantyExclusions: `Damage or defect caused by transportation, accident, misuse, lack of maintenance, improper usage, or negligence by the owner.
+Wilful damage, normal wear and tear, abuse, or misuse of equipment/product.
+Damage or defect caused by Force Majeure events, including fire, earthquake, flood, or other natural disasters.
+Damage or defect caused by unauthorized alterations, modifications, or conversions.
+Repairs carried out by personnel not authorized by the contractor.
+Defects or damages due to external causes.
+Parts and components repaired or replaced during the warranty period are warranted only for the original warranty period. The contractor will take back replaced or defective material.`,
+
+  scopeOfWork: `Providing access/approach to rooftop.
+If any electrical modification is required from DISCOM (i.e. ELCB, changeover switch etc.) Customer shall provide necessary support.
+Provide necessary documents for project approvals from State/Central Government.
+Site clearance, ladders, water, and electricity supply for smooth installation and commissioning of the project.
+Customer shall provide Safe Place for Material unloading and storage during the work execution.
+Net meter / Smart meter charge in your scope.`
 };
 
 const initialMainItem = {
@@ -39,6 +78,22 @@ const initialMainItem = {
   discount: 0,
   totalAmountWithTax: 0
 };
+
+const TERMS_FIELDS = [
+  { key: 'generalTerms', label: 'General Terms' },
+  { key: 'governmentSubsidy', label: 'Government Subsidy' },
+  { key: 'warrantyDetails', label: 'Warranty Details' },
+  { key: 'panelWarranty', label: 'Solar Panel Warranty' },
+  { key: 'inverterWarranty', label: 'Inverter Warranty' },
+  { key: 'batteryWarranty', label: 'Battery Warranty' },
+  { key: 'bosWarranty', label: 'BOS Warranty' },
+  { key: 'maintenanceWarranty', label: 'Maintenance / Service Warranty' },
+  { key: 'warrantyNotes', label: 'Additional Warranty Notes' },
+  { key: 'siteCompletionSchedule', label: 'Site Completion Schedule' },
+  { key: 'paymentTerms', label: 'Payment Terms' },
+  { key: 'warrantyExclusions', label: 'Warranty Exclusions' },
+  { key: 'scopeOfWork', label: 'Scope of Work' }
+];
 
 const EditQuotation = () => {
   const { id } = useParams();
@@ -56,6 +111,9 @@ const EditQuotation = () => {
   const [formData, setFormData] = useState({
     leadName: '',
     plantCapacity: '',
+    customerCategory: 'RESIDENTIAL',
+    systemType: 'ON_GRID',
+    batteryIncluded: false,
     panelCount: 0,
     expiryDate: '',
     mainItem: { ...initialMainItem },
@@ -68,16 +126,16 @@ const EditQuotation = () => {
     gstAmount: 0,
     grandTotal: 0,
     subsidyAmount: '',
-    termsAndConditions: { ...DEFAULT_TERMS_AND_CONDITIONS, warrantyDetails: DEFAULT_TERMS_AND_CONDITIONS.panelWarranty }
+    termsAndConditions: {
+      ...DEFAULT_TERMS_AND_CONDITIONS,
+      warrantyDetails: DEFAULT_TERMS_AND_CONDITIONS.panelWarranty
+    }
   });
 
   const [bomItems, setBomItems] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
 
-  // =====================================
-  // 1. FETCH REAL QUOTATION API
-  // =====================================
-
+  // Fetch quotation details
   useEffect(() => {
     let isMounted = true;
 
@@ -97,11 +155,20 @@ const EditQuotation = () => {
         setCustomer(data.customer || null);
         setEstimateNo(data.estimateNo || '');
         setStatus(data.status || '');
-        setTestimonials(Array.isArray(data.testimonials) ? data.testimonials : []);
+
+        setTestimonials(
+          Array.isArray(data.testimonials) ? data.testimonials : []
+        );
 
         setFormData({
           leadName: data.leadName || '',
-          plantCapacity: data.plantCapacity || '',
+
+          plantCapacity: String(data.plantCapacity || '')
+            .replace(/\s*KW\s*$/i, ''),
+
+          customerCategory: data.customerCategory || 'RESIDENTIAL',
+          systemType: data.systemType || 'ON_GRID',
+          batteryIncluded: Boolean(data.batteryIncluded),
           panelCount: data.panelCount || 0,
 
           expiryDate: data.expiryDate
@@ -113,7 +180,10 @@ const EditQuotation = () => {
             ...(data.mainItem || {})
           },
 
-          materialTotalAmount: Number(data.materialTotalAmount ?? data.subTotal) || 0,
+          materialTotalAmount: Number(
+            data.materialTotalAmount ?? data.subTotal
+          ) || 0,
+
           materialGstRate: Number(data.materialGstRate ?? 0),
           gstType: data.gstType || 'CGST_SGST',
           gstMode: data.gstMode || 'EXTRA',
@@ -123,27 +193,35 @@ const EditQuotation = () => {
           grandTotal: Number(data.grandTotal) || 0,
 
           subsidyAmount: data.subsidyAmount || '',
-          termsAndConditions: { ...DEFAULT_TERMS_AND_CONDITIONS, warrantyDetails: DEFAULT_TERMS_AND_CONDITIONS.panelWarranty, ...(data.termsAndConditions || {}) }
+
+          termsAndConditions: {
+            ...DEFAULT_TERMS_AND_CONDITIONS,
+            warrantyDetails: DEFAULT_TERMS_AND_CONDITIONS.panelWarranty,
+            ...(data.termsAndConditions || {})
+          }
         });
 
         setBomItems(
-          (data.bom || []).map((item, index) => ({
-            srNo: item.srNo || String(index + 1),
-            itemDescription: item.itemDescription || '',
-            qty: Number(item.qty) || 0,
-            unit: item.unit || 'Nos',
-            brand: item.brand || '',
-            rate: Number(item.rate) || 0,
-            gstRate: Number(item.gstRate) || 0,
-            gstAmount: Number(
-              (((Number(item.qty) || 0) * (Number(item.rate) || 0) *
-                (Number(item.gstRate) || 0)) / 100).toFixed(2)
-            ),
-            total: Number(
-              ((Number(item.qty) || 0) * (Number(item.rate) || 0) *
-                (1 + (Number(item.gstRate) || 0) / 100)).toFixed(2)
-            )
-          }))
+          (data.bom || []).map((item, index) => {
+            const qty = Number(item.qty) || 0;
+            const rate = Number(item.rate) || 0;
+            const gstRate = Number(item.gstRate) || 0;
+
+            const baseAmount = qty * rate;
+            const gstAmount = baseAmount * gstRate / 100;
+
+            return {
+              srNo: item.srNo || String(index + 1),
+              itemDescription: item.itemDescription || '',
+              qty,
+              unit: item.unit || 'Nos',
+              brand: item.brand || '',
+              rate,
+              gstRate,
+              gstAmount: Number(gstAmount.toFixed(2)),
+              total: Number((baseAmount + gstAmount).toFixed(2))
+            };
+          })
         );
 
       } catch (err) {
@@ -168,10 +246,7 @@ const EditQuotation = () => {
     };
   }, [id]);
 
-  // =====================================
-  // 2. FORM HANDLERS
-  // =====================================
-
+  // General input handler
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
@@ -180,15 +255,18 @@ const EditQuotation = () => {
       [name]: value
     }));
 
-    if (name === 'plantCapacity' || name === 'perKwAmount') {
-      const capacityText = name === 'plantCapacity' ? value : formData.plantCapacity;
-      const perKwText = name === 'perKwAmount' ? value : formData.perKwAmount;
-      const capacity = Number.parseFloat(String(capacityText).replace(/[^0-9.]/g, '')) || 0;
-      const perKw = Number(perKwText) || 0;
-      if (capacity > 0 && perKw > 0) setFormData(prev => ({ ...prev, [name]: value, materialTotalAmount: Math.round(capacity * perKw) }));
+    if (
+      name === 'plantCapacity' &&
+      value !== '' &&
+      (Number(value) <= 0 || Number(value) > 20)
+    ) {
+      setError('Plant capacity must be between 0 and 20 KW.');
+    } else if (name === 'plantCapacity') {
+      setError('');
     }
   };
 
+  // Main item handler
   const handleMainItemChange = (e) => {
     const { name, value } = e.target;
 
@@ -201,10 +279,7 @@ const EditQuotation = () => {
     }));
   };
 
-  // =====================================
-  // 3. BOM HANDLERS
-  // =====================================
-
+  // BOM handlers
   const handleBomChange = (index, field, value) => {
     setBomItems(prev =>
       prev.map((item, i) => {
@@ -259,31 +334,89 @@ const EditQuotation = () => {
     );
   };
 
-  // =====================================
-  // 4. AUTOMATIC BOM CALCULATIONS
-  // =====================================
-
+  // GST calculations
   const totals = useMemo(() => {
     const amount = Number(formData.materialTotalAmount) || 0;
     const rate = Math.max(0, Number(formData.materialGstRate) || 0);
-    const gstAmount = formData.gstType === 'NONE' ? 0 : Number((formData.gstMode === 'INCLUDED' ? amount - amount / (1 + rate / 100) : amount * rate / 100).toFixed(2));
-    const subTotal = formData.gstMode === 'INCLUDED' ? Number((amount - gstAmount).toFixed(2)) : amount;
-    const cgstAmount = formData.gstType === 'CGST_SGST' ? Number((gstAmount / 2).toFixed(2)) : 0;
-    const sgstAmount = formData.gstType === 'CGST_SGST' ? Number((gstAmount / 2).toFixed(2)) : 0;
-    const igstAmount = formData.gstType === 'IGST' ? gstAmount : 0;
-    return { subTotal, gstAmount, cgstAmount, sgstAmount, igstAmount, grandTotal: Number((formData.gstMode === 'INCLUDED' ? amount : amount + gstAmount).toFixed(2)) };
-  }, [formData.materialTotalAmount, formData.materialGstRate, formData.gstType, formData.gstMode]);
 
+    const gstAmount =
+      formData.gstType === 'NONE'
+        ? 0
+        : Number((
+            formData.gstMode === 'INCLUDED'
+              ? amount - amount / (1 + rate / 100)
+              : amount * rate / 100
+          ).toFixed(2));
 
-  // =====================================
-  // 5. UPDATE REAL QUOTATION API
-  // =====================================
+    const subTotal =
+      formData.gstMode === 'INCLUDED'
+        ? Number((amount - gstAmount).toFixed(2))
+        : amount;
 
+    const cgstAmount =
+      formData.gstType === 'CGST_SGST'
+        ? Number((gstAmount / 2).toFixed(2))
+        : 0;
+
+    const sgstAmount =
+      formData.gstType === 'CGST_SGST'
+        ? Number((gstAmount / 2).toFixed(2))
+        : 0;
+
+    const igstAmount =
+      formData.gstType === 'IGST' ? gstAmount : 0;
+
+    const grandTotal = Number((
+      formData.gstMode === 'INCLUDED'
+        ? amount
+        : amount + gstAmount
+    ).toFixed(2));
+
+    return {
+      subTotal,
+      gstAmount,
+      cgstAmount,
+      sgstAmount,
+      igstAmount,
+      grandTotal
+    };
+  }, [
+    formData.materialTotalAmount,
+    formData.materialGstRate,
+    formData.gstType,
+    formData.gstMode
+  ]);
+
+  // Terms and conditions handler
+  const handleTermsChange = (key, value) => {
+    setFormData(prev => ({
+      ...prev,
+      termsAndConditions: {
+        ...prev.termsAndConditions,
+        [key]: value
+      }
+    }));
+  };
+
+  // Update quotation
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (status !== 'Draft') {
       setError('Only Draft quotations can be edited.');
+      return;
+    }
+
+    const capacity = Number(formData.plantCapacity);
+    const amount = Number(formData.materialTotalAmount);
+
+    if (!capacity || capacity <= 0 || capacity > 20) {
+      setError('Plant capacity must be between 0 and 20 KW.');
+      return;
+    }
+
+    if (!amount || amount <= 0) {
+      setError('Please enter quotation amount manually.');
       return;
     }
 
@@ -294,8 +427,11 @@ const EditQuotation = () => {
 
       const payload = {
         leadName: formData.leadName,
-        plantCapacity: formData.plantCapacity,
-        panelCount: Number(formData.panelCount),
+        plantCapacity: `${capacity} KW`,
+        customerCategory: formData.customerCategory,
+        systemType: formData.systemType,
+        batteryIncluded: formData.systemType !== 'ON_GRID',
+        panelCount: Number(formData.panelCount) || 0,
 
         expiryDate: formData.expiryDate || undefined,
 
@@ -307,24 +443,42 @@ const EditQuotation = () => {
             Number(formData.mainItem.totalAmountWithTax) || 0
         },
 
-        materialTotalAmount: Number(formData.materialTotalAmount) || 0,
+        materialTotalAmount: amount,
         perKwAmount: Number(formData.perKwAmount) || 0,
+
         gstMode: formData.gstMode,
-        testimonials,
-        materialGstRate: Number(formData.materialGstRate),
+        materialGstRate: Number(formData.materialGstRate) || 0,
         gstType: formData.gstType,
+
         cgstAmount: totals.cgstAmount,
         sgstAmount: totals.sgstAmount,
         igstAmount: totals.igstAmount,
+
         subTotal: totals.subTotal,
         gstAmount: totals.gstAmount,
         grandTotal: totals.grandTotal,
 
-        subsidyAmount: formData.subsidyAmount,
+        testimonials,
+
+        subsidyAmount:
+          formData.customerCategory === 'RESIDENTIAL' &&
+          formData.systemType !== 'OFF_GRID'
+            ? formData.subsidyAmount
+            : '',
 
         termsAndConditions: formData.termsAndConditions,
 
-        bom: bomItems.map((item, index) => ({ srNo: item.srNo || String(index + 1), itemDescription: item.itemDescription, qty: Number(item.qty) || 0, unit: item.unit, brand: item.brand, rate: 0, gstRate: 0, gstAmount: 0, total: 0 }))
+        bom: bomItems.map((item, index) => ({
+          srNo: item.srNo || String(index + 1),
+          itemDescription: item.itemDescription,
+          qty: Number(item.qty) || 0,
+          unit: item.unit,
+          brand: item.brand,
+          rate: 0,
+          gstRate: 0,
+          gstAmount: 0,
+          total: 0
+        }))
       };
 
       await quotationService.update(id, payload);
@@ -342,15 +496,10 @@ const EditQuotation = () => {
         err.response?.data?.message ||
         'Failed to update quotation. Please try again.'
       );
-
     } finally {
       setIsSaving(false);
     }
   };
-
-  // =====================================
-  // 6. LOADING & ERROR STATES
-  // =====================================
 
   if (isLoading) {
     return <Loader text="Loading Quotation Data..." />;
@@ -369,16 +518,13 @@ const EditQuotation = () => {
 
   const isEditable = status === 'Draft';
 
-  // =====================================
-  // 7. UI
-  // =====================================
-
   return (
     <div className="edit-quotation-page">
 
       <div className="page-top-bar">
         <button
           className="back-btn"
+          type="button"
           onClick={() => navigate('/admin/quotations')}
         >
           <FiArrowLeft />
@@ -436,12 +582,9 @@ const EditQuotation = () => {
         {/* SECTION 1: CUSTOMER DETAILS */}
 
         <div className="form-card">
-
           <h3 className="section-title">
-            1. Customer & System Details
+            1. Customer &amp; System Details
           </h3>
-          <div style={{ marginBottom: 14 }}>
-          </div>
 
           <div className="form-grid">
 
@@ -468,16 +611,74 @@ const EditQuotation = () => {
             </div>
 
             <div>
-              <label>Plant Capacity</label>
-              <select
+              <label>Plant Capacity (KW)</label>
+              <Input
                 name="plantCapacity"
+                type="number"
+                min="0.1"
+                max="20"
+                step="any"
                 value={formData.plantCapacity}
                 onChange={handleInputChange}
                 disabled={!isEditable}
-                style={{ minHeight: 44, width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}
+                placeholder="Enter capacity in KW (max 20)"
+              />
+            </div>
+
+            <div>
+              <label>Customer Category</label>
+              <select
+                value={formData.customerCategory}
+                disabled={!isEditable}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  customerCategory: e.target.value,
+                  subsidyAmount:
+                    e.target.value === 'RESIDENTIAL' &&
+                    prev.systemType !== 'OFF_GRID'
+                      ? prev.subsidyAmount
+                      : ''
+                }))}
+                style={{
+                  minHeight: 44,
+                  width: '100%',
+                  border: '1px solid #ddd',
+                  borderRadius: 8,
+                  padding: '0 12px'
+                }}
               >
-                {!Array.from({ length: 20 }, (_, index) => `${index + 1} KW`).includes(formData.plantCapacity) && formData.plantCapacity && <option value={formData.plantCapacity}>{formData.plantCapacity} (Existing)</option>}
-                {Array.from({ length: 20 }, (_, index) => index + 1).map(kw => <option key={kw} value={`${kw} KW`}>{kw} KW</option>)}
+                <option value="RESIDENTIAL">Residential</option>
+                <option value="COMMERCIAL">Commercial</option>
+                <option value="INDUSTRIAL">Industrial</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Solar System Type</label>
+              <select
+                value={formData.systemType}
+                disabled={!isEditable}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  systemType: e.target.value,
+                  batteryIncluded: e.target.value !== 'ON_GRID',
+                  subsidyAmount:
+                    prev.customerCategory === 'RESIDENTIAL' &&
+                    e.target.value !== 'OFF_GRID'
+                      ? prev.subsidyAmount
+                      : ''
+                }))}
+                style={{
+                  minHeight: 44,
+                  width: '100%',
+                  border: '1px solid #ddd',
+                  borderRadius: 8,
+                  padding: '0 12px'
+                }}
+              >
+                <option value="ON_GRID">On-Grid (No Battery)</option>
+                <option value="OFF_GRID">Off-Grid (Battery)</option>
+                <option value="HYBRID">Hybrid (Grid + Battery)</option>
               </select>
             </div>
 
@@ -486,6 +687,7 @@ const EditQuotation = () => {
               <Input
                 name="panelCount"
                 type="number"
+                min="0"
                 value={formData.panelCount}
                 onChange={handleInputChange}
                 disabled={!isEditable}
@@ -506,247 +708,433 @@ const EditQuotation = () => {
           </div>
         </div>
 
-        {/* SECTION 2: COMBINED MATERIAL PRICING */}
+        {/* SECTION 2: MATERIAL PRICING */}
+
         <div className="form-card">
-          <h3 className="section-title">2. Combined Material Pricing</h3>
+          <h3 className="section-title">
+            2. Combined Material Pricing
+          </h3>
+
           <div className="form-grid" style={{ alignItems: 'end' }}>
-            <Input label="Amount per KW (₹)" type="number" value={formData.perKwAmount} disabled={!isEditable} onChange={e => handleInputChange({ target: { name: 'perKwAmount', value: e.target.value } })} />
-            <Input label="Total Quotation Amount (₹)" type="number" value={formData.materialTotalAmount} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, materialTotalAmount: e.target.value }))} />
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>GST Type<select value={formData.gstType} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, gstType: e.target.value }))} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}><option value="CGST_SGST">CGST + SGST</option><option value="IGST">IGST</option><option value="NONE">No GST</option></select></label>
-            <Input label="GST Percentage (any value)" type="number" min="0" step="any" value={formData.materialGstRate} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, materialGstRate: e.target.value }))} />
-            <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>GST Calculation<select value={formData.gstMode} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, gstMode: e.target.value }))} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}><option value="EXTRA">GST Extra</option><option value="INCLUDED">GST Included in Amount</option></select></label>
+
+            <Input
+              label="Amount per KW (₹)"
+              type="number"
+              value={formData.perKwAmount}
+              disabled={!isEditable}
+              onChange={e => handleInputChange({
+                target: {
+                  name: 'perKwAmount',
+                  value: e.target.value
+                }
+              })}
+            />
+
+            <Input
+              label="Total Quotation Amount (₹)"
+              type="number"
+              value={formData.materialTotalAmount}
+              disabled={!isEditable}
+              onChange={e => setFormData(prev => ({
+                ...prev,
+                materialTotalAmount: e.target.value
+              }))}
+            />
+
+            <label>
+              GST Type
+              <select
+                value={formData.gstType}
+                disabled={!isEditable}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  gstType: e.target.value
+                }))}
+                style={{
+                  minHeight: 44,
+                  width: '100%',
+                  border: '1px solid #ddd',
+                  borderRadius: 8,
+                  padding: '0 12px'
+                }}
+              >
+                <option value="CGST_SGST">CGST + SGST</option>
+                <option value="IGST">IGST</option>
+                <option value="NONE">No GST</option>
+              </select>
+            </label>
+
+            <Input
+              label="GST Percentage"
+              type="number"
+              min="0"
+              step="any"
+              value={formData.materialGstRate}
+              disabled={!isEditable}
+              onChange={e => setFormData(prev => ({
+                ...prev,
+                materialGstRate: e.target.value
+              }))}
+            />
+
+            <label>
+              GST Calculation
+              <select
+                value={formData.gstMode}
+                disabled={!isEditable}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  gstMode: e.target.value
+                }))}
+                style={{
+                  minHeight: 44,
+                  width: '100%',
+                  border: '1px solid #ddd',
+                  borderRadius: 8,
+                  padding: '0 12px'
+                }}
+              >
+                <option value="EXTRA">GST Extra</option>
+                <option value="INCLUDED">GST Included in Amount</option>
+              </select>
+            </label>
+
           </div>
-          <div className="summary-box"><div className="summary-row"><span>{formData.gstMode === 'INCLUDED' ? 'Taxable Amount:' : 'Package Amount:'}</span><strong>₹ {totals.subTotal.toLocaleString('en-IN')}</strong></div>{formData.gstType === 'CGST_SGST' ? <><div className="summary-row"><span>CGST ({formData.materialGstRate / 2}%):</span><strong>₹ {totals.cgstAmount.toLocaleString('en-IN')}</strong></div><div className="summary-row"><span>SGST ({formData.materialGstRate / 2}%):</span><strong>₹ {totals.sgstAmount.toLocaleString('en-IN')}</strong></div></> : formData.gstType === 'IGST' ? <div className="summary-row"><span>IGST ({formData.materialGstRate}%):</span><strong>₹ {totals.igstAmount.toLocaleString('en-IN')}</strong></div> : <div className="summary-row"><span>GST:</span><strong>₹ 0</strong></div>}<div className="summary-row total"><span>Grand Total:</span><strong>₹ {totals.grandTotal.toLocaleString('en-IN')}</strong></div></div>
-          <div style={{ marginTop: 20 }}><Input label="Subsidy Note" name="subsidyAmount" value={formData.subsidyAmount} onChange={handleInputChange} disabled={!isEditable} placeholder="Enter subsidy details" /></div>
+
+          <div className="summary-box">
+
+            <div className="summary-row">
+              <span>
+                {formData.gstMode === 'INCLUDED'
+                  ? 'Taxable Amount:'
+                  : 'Package Amount:'}
+              </span>
+              <strong>
+                ₹ {totals.subTotal.toLocaleString('en-IN')}
+              </strong>
+            </div>
+
+            {formData.gstType === 'CGST_SGST' ? (
+              <>
+                <div className="summary-row">
+                  <span>
+                    CGST ({Number(formData.materialGstRate) / 2}%):
+                  </span>
+                  <strong>
+                    ₹ {totals.cgstAmount.toLocaleString('en-IN')}
+                  </strong>
+                </div>
+
+                <div className="summary-row">
+                  <span>
+                    SGST ({Number(formData.materialGstRate) / 2}%):
+                  </span>
+                  <strong>
+                    ₹ {totals.sgstAmount.toLocaleString('en-IN')}
+                  </strong>
+                </div>
+              </>
+            ) : formData.gstType === 'IGST' ? (
+              <div className="summary-row">
+                <span>
+                  IGST ({Number(formData.materialGstRate)}%):
+                </span>
+                <strong>
+                  ₹ {totals.igstAmount.toLocaleString('en-IN')}
+                </strong>
+              </div>
+            ) : (
+              <div className="summary-row">
+                <span>GST:</span>
+                <strong>₹ 0</strong>
+              </div>
+            )}
+
+            <div className="summary-row total">
+              <span>Grand Total:</span>
+              <strong>
+                ₹ {totals.grandTotal.toLocaleString('en-IN')}
+              </strong>
+            </div>
+
+          </div>
+
+          <div style={{ marginTop: 20 }}>
+            <Input
+              label="Subsidy Note"
+              name="subsidyAmount"
+              value={formData.subsidyAmount}
+              onChange={handleInputChange}
+              disabled={
+                !isEditable ||
+                formData.customerCategory !== 'RESIDENTIAL' ||
+                formData.systemType === 'OFF_GRID'
+              }
+              placeholder="Enter eligible subsidy details"
+            />
+          </div>
         </div>
+
+        {/* SECTION 3: TESTIMONIALS */}
 
         <div className="form-card">
           <h3 className="section-title">Testimonials</h3>
-          {testimonials.map((item,index)=><div className="testimonial-editor" key={index}>
-            <Input label={`Customer ${index+1}`} value={item.name || ''} disabled={!isEditable} onChange={e=>setTestimonials(prev=>prev.map((t,i)=>i===index?{...t,name:e.target.value}:t))}/>
-            <label>Testimonial<textarea rows="3" disabled={!isEditable} value={item.text || ''} onChange={e=>setTestimonials(prev=>prev.map((t,i)=>i===index?{...t,text:e.target.value}:t))}/></label>
-            {isEditable && <button type="button" className="remove-btn" onClick={()=>setTestimonials(prev=>prev.filter((_,i)=>i!==index))}>Remove</button>}
-          </div>)}
-          {isEditable && <Button type="button" variant="secondary" onClick={()=>setTestimonials(prev=>[...prev,{name:'',text:'',rating:5}])}>Add Testimonial</Button>}
+
+          {testimonials.map((item, index) => (
+            <div className="testimonial-editor" key={index}>
+
+              <Input
+                label={`Customer ${index + 1}`}
+                value={item.name || ''}
+                disabled={!isEditable}
+                onChange={e => setTestimonials(prev =>
+                  prev.map((t, i) =>
+                    i === index
+                      ? { ...t, name: e.target.value }
+                      : t
+                  )
+                )}
+              />
+
+              <label>
+                Testimonial
+                <textarea
+                  rows="3"
+                  disabled={!isEditable}
+                  value={item.text || ''}
+                  onChange={e => setTestimonials(prev =>
+                    prev.map((t, i) =>
+                      i === index
+                        ? { ...t, text: e.target.value }
+                        : t
+                    )
+                  )}
+                />
+              </label>
+
+              {isEditable && (
+                <button
+                  type="button"
+                  className="remove-btn"
+                  onClick={() => setTestimonials(prev =>
+                    prev.filter((_, i) => i !== index)
+                  )}
+                >
+                  Remove
+                </button>
+              )}
+
+            </div>
+          ))}
+
+          {isEditable && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setTestimonials(prev => [
+                ...prev,
+                { name: '', text: '', rating: 5 }
+              ])}
+            >
+              Add Testimonial
+            </Button>
+          )}
         </div>
 
-        {/* SECTION 3: BOM MATERIAL DETAILS ONLY */}
+        {/* SECTION 4: BILL OF MATERIAL */}
+
         <div className="form-card">
-          <div className="section-header-row"><h3 className="section-title">3. Bill of Material (BOM)</h3>{isEditable && <Button type="button" variant="secondary" size="sm" icon={<FiPlus />} onClick={addBomItem}>Add Item</Button>}</div>
-          <div className="bom-table-container"><table className="bom-table"><thead><tr><th>Sr No.</th><th>Item Description</th><th>Qty</th><th>Unit</th><th>Brand</th>{isEditable && <th>Action</th>}</tr></thead><tbody>
-            {bomItems.map((item,index)=><tr key={index}><td><input value={item.srNo} disabled={!isEditable} onChange={e=>handleBomChange(index,'srNo',e.target.value)} /></td><td><input value={item.itemDescription} disabled={!isEditable} onChange={e=>handleBomChange(index,'itemDescription',e.target.value)} /></td><td><input type="number" min="0" value={item.qty} disabled={!isEditable} onChange={e=>handleBomChange(index,'qty',e.target.value)} /></td><td><input value={item.unit} disabled={!isEditable} onChange={e=>handleBomChange(index,'unit',e.target.value)} /></td><td><input value={item.brand} disabled={!isEditable} onChange={e=>handleBomChange(index,'brand',e.target.value)} /></td>{isEditable && <td><button type="button" className="remove-btn" onClick={()=>removeBomItem(index)}><FiTrash2 /></button></td>}</tr>)}
-            {bomItems.length===0 && <tr><td colSpan={isEditable?6:5}>No BOM items available.</td></tr>}
-          </tbody></table></div>
+
+          <div className="section-header-row">
+            <h3 className="section-title">
+              3. Bill of Material (BOM)
+            </h3>
+
+            {isEditable && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                icon={<FiPlus />}
+                onClick={addBomItem}
+              >
+                Add Item
+              </Button>
+            )}
+          </div>
+
+          <div className="bom-table-container">
+            <table className="bom-table">
+
+              <thead>
+                <tr>
+                  <th>Sr No.</th>
+                  <th>Item Description</th>
+                  <th>Qty</th>
+                  <th>Unit</th>
+                  <th>Brand</th>
+                  {isEditable && <th>Action</th>}
+                </tr>
+              </thead>
+
+              <tbody>
+                {bomItems.map((item, index) => (
+                  <tr key={index}>
+
+                    <td>
+                      <input
+                        value={item.srNo}
+                        disabled={!isEditable}
+                        onChange={e => handleBomChange(
+                          index,
+                          'srNo',
+                          e.target.value
+                        )}
+                      />
+                    </td>
+
+                    <td>
+                      <input
+                        value={item.itemDescription}
+                        disabled={!isEditable}
+                        onChange={e => handleBomChange(
+                          index,
+                          'itemDescription',
+                          e.target.value
+                        )}
+                      />
+                    </td>
+
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        value={item.qty}
+                        disabled={!isEditable}
+                        onChange={e => handleBomChange(
+                          index,
+                          'qty',
+                          e.target.value
+                        )}
+                      />
+                    </td>
+
+                    <td>
+                      <input
+                        value={item.unit}
+                        disabled={!isEditable}
+                        onChange={e => handleBomChange(
+                          index,
+                          'unit',
+                          e.target.value
+                        )}
+                      />
+                    </td>
+
+                    <td>
+                      <input
+                        value={item.brand}
+                        disabled={!isEditable}
+                        onChange={e => handleBomChange(
+                          index,
+                          'brand',
+                          e.target.value
+                        )}
+                      />
+                    </td>
+
+                    {isEditable && (
+                      <td>
+                        <button
+                          type="button"
+                          className="remove-btn"
+                          onClick={() => removeBomItem(index)}
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </td>
+                    )}
+
+                  </tr>
+                ))}
+
+                {bomItems.length === 0 && (
+                  <tr>
+                    <td colSpan={isEditable ? 6 : 5}>
+                      No BOM items available.
+                    </td>
+                  </tr>
+                )}
+
+              </tbody>
+            </table>
+          </div>
         </div>
 
+        {/* SECTION 5: TERMS AND CONDITIONS */}
 
-        {/* SECTION 4: EDITABLE TERMS & CONDITIONS */}
         <div className="form-card terms-edit-card">
-          <h3 className="section-title">4. Terms &amp; Conditions</h3>
-          <p style={{ color: "#64748b", fontSize: 13, marginTop: -6, marginBottom: 16 }}>
-            Edit the terms below. These saved values are used when the quotation PDF is generated.
+
+          <h3 className="section-title">
+            4. Terms &amp; Conditions
+          </h3>
+
+          <p style={{
+            color: '#64748b',
+            fontSize: 13,
+            marginTop: -6,
+            marginBottom: 16
+          }}>
+            Edit the terms below. These saved values are used when the
+            quotation PDF is generated.
           </p>
+
           <div className="form-grid">
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>General Terms</label>
-              <textarea
-                name="generalTerms"
-                value={formData.termsAndConditions?.generalTerms || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  termsAndConditions: { ...prev.termsAndConditions, generalTerms: e.target.value }
-                }))}
-                disabled={!isEditable}
-                rows={3}
-                placeholder="Enter general terms..."
-                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Government Subsidy</label>
-              <textarea
-                name="governmentSubsidy"
-                value={formData.termsAndConditions?.governmentSubsidy || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  termsAndConditions: { ...prev.termsAndConditions, governmentSubsidy: e.target.value }
-                }))}
-                disabled={!isEditable}
-                rows={3}
-                placeholder="Enter government subsidy..."
-                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Warranty Details</label>
-              <textarea
-                name="warrantyDetails"
-                value={formData.termsAndConditions?.warrantyDetails || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  termsAndConditions: { ...prev.termsAndConditions, warrantyDetails: e.target.value }
-                }))}
-                disabled={!isEditable}
-                rows={3}
-                placeholder="Enter warranty details..."
-                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Solar Panel Warranty</label>
-              <textarea
-                name="panelWarranty"
-                value={formData.termsAndConditions?.panelWarranty || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  termsAndConditions: { ...prev.termsAndConditions, panelWarranty: e.target.value }
-                }))}
-                disabled={!isEditable}
-                rows={3}
-                placeholder="Enter solar panel warranty..."
-                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Inverter Warranty</label>
-              <textarea
-                name="inverterWarranty"
-                value={formData.termsAndConditions?.inverterWarranty || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  termsAndConditions: { ...prev.termsAndConditions, inverterWarranty: e.target.value }
-                }))}
-                disabled={!isEditable}
-                rows={3}
-                placeholder="Enter inverter warranty..."
-                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Battery Warranty</label>
-              <textarea
-                name="batteryWarranty"
-                value={formData.termsAndConditions?.batteryWarranty || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  termsAndConditions: { ...prev.termsAndConditions, batteryWarranty: e.target.value }
-                }))}
-                disabled={!isEditable}
-                rows={3}
-                placeholder="Enter battery warranty..."
-                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>BOS Warranty</label>
-              <textarea
-                name="bosWarranty"
-                value={formData.termsAndConditions?.bosWarranty || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  termsAndConditions: { ...prev.termsAndConditions, bosWarranty: e.target.value }
-                }))}
-                disabled={!isEditable}
-                rows={3}
-                placeholder="Enter bos warranty..."
-                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Maintenance / Service Warranty</label>
-              <textarea
-                name="maintenanceWarranty"
-                value={formData.termsAndConditions?.maintenanceWarranty || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  termsAndConditions: { ...prev.termsAndConditions, maintenanceWarranty: e.target.value }
-                }))}
-                disabled={!isEditable}
-                rows={3}
-                placeholder="Enter maintenance / service warranty..."
-                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Additional Warranty Notes</label>
-              <textarea
-                name="warrantyNotes"
-                value={formData.termsAndConditions?.warrantyNotes || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  termsAndConditions: { ...prev.termsAndConditions, warrantyNotes: e.target.value }
-                }))}
-                disabled={!isEditable}
-                rows={3}
-                placeholder="Enter additional warranty notes..."
-                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Site Completion Schedule</label>
-              <textarea
-                name="siteCompletionSchedule"
-                value={formData.termsAndConditions?.siteCompletionSchedule || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  termsAndConditions: { ...prev.termsAndConditions, siteCompletionSchedule: e.target.value }
-                }))}
-                disabled={!isEditable}
-                rows={3}
-                placeholder="Enter site completion schedule..."
-                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Payment Terms</label>
-              <textarea
-                name="paymentTerms"
-                value={formData.termsAndConditions?.paymentTerms || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  termsAndConditions: { ...prev.termsAndConditions, paymentTerms: e.target.value }
-                }))}
-                disabled={!isEditable}
-                rows={3}
-                placeholder="Enter payment terms..."
-                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Warranty Exclusions</label>
-              <textarea
-                name="warrantyExclusions"
-                value={formData.termsAndConditions?.warrantyExclusions || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  termsAndConditions: { ...prev.termsAndConditions, warrantyExclusions: e.target.value }
-                }))}
-                disabled={!isEditable}
-                rows={3}
-                placeholder="Enter warranty exclusions..."
-                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
-              />
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ display: "block", fontWeight: 600, marginBottom: 7 }}>Scope of Work</label>
-              <textarea
-                name="scopeOfWork"
-                value={formData.termsAndConditions?.scopeOfWork || ""}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  termsAndConditions: { ...prev.termsAndConditions, scopeOfWork: e.target.value }
-                }))}
-                disabled={!isEditable}
-                rows={3}
-                placeholder="Enter scope of work..."
-                style={{ width: "100%", minHeight: 86, padding: 12, border: "1px solid #d1d5db", borderRadius: 8, resize: "vertical", font: "inherit", background: isEditable ? "#fff" : "#f8fafc", color: "#1f2937" }}
-              />
-            </div>
+
+            {TERMS_FIELDS.map(field => (
+              <div
+                key={field.key}
+                style={{ gridColumn: '1 / -1' }}
+              >
+                <label style={{
+                  display: 'block',
+                  fontWeight: 600,
+                  marginBottom: 7
+                }}>
+                  {field.label}
+                </label>
+
+                <textarea
+                  name={field.key}
+                  value={
+                    formData.termsAndConditions?.[field.key] || ''
+                  }
+                  onChange={e => handleTermsChange(
+                    field.key,
+                    e.target.value
+                  )}
+                  disabled={!isEditable}
+                  rows={4}
+                  placeholder={`Enter ${field.label.toLowerCase()}...`}
+                  style={{
+                    width: '100%',
+                    minHeight: 86,
+                    padding: 12,
+                    border: '1px solid #d1d5db',
+                    borderRadius: 8,
+                    resize: 'vertical',
+                    font: 'inherit',
+                    background: isEditable ? '#fff' : '#f8fafc',
+                    color: '#1f2937'
+                  }}
+                />
+              </div>
+            ))}
+
           </div>
         </div>
 
       </form>
-
     </div>
   );
 };
