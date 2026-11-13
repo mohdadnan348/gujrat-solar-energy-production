@@ -777,7 +777,9 @@ const CreateQuotation = () => {
 
             <h4>Customer & System Details</h4>
             <p>
-              Capacity: {formData.plantCapacity || '—'} |
+              Capacity: {formData.plantCapacity || '—'} KW |
+              Category: {formData.customerCategory} |
+              System: {formData.systemType.replace('_', '-')} |
               Panels: {formData.panelCount || '—'} |
               Lead: {formData.leadName || '—'}
             </p>

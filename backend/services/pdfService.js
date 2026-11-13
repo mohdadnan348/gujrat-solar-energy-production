@@ -213,8 +213,22 @@ const generateQuotationPDF = async (quotationData, customerData) => {
 
     // Consolidated quotation line on Page 4.
     const mainItem = quotationData.mainItem || {};
+    const categoryLabels = {
+      RESIDENTIAL: "Residential",
+      COMMERCIAL: "Commercial",
+      INDUSTRIAL: "Industrial",
+    };
+    const systemLabels = {
+      ON_GRID: "On-Grid",
+      OFF_GRID: "Off-Grid",
+      HYBRID: "Hybrid",
+    };
+    const customerCategoryLabel =
+      categoryLabels[quotationData.customerCategory] || "Residential";
+    const systemTypeLabel =
+      systemLabels[quotationData.systemType] || "On-Grid";
     const mainItemDescription =
-      mainItem.description || "Residential Solar Rooftop On-grid Plant";
+      mainItem.description || `${customerCategoryLabel} Solar Rooftop ${systemTypeLabel} Plant`;
 
     // If the Pricing Details brand fields are blank, use the matching BOM brand.
     const panelBomItem = bom.find((item) =>
@@ -260,6 +274,7 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     const subsidyText = quotationData.subsidyAmount || "";
     const mainItemDescriptionHtml = [
       `<strong>${escapeHtml(mainItemDescription)}</strong>`,
+      `<div class="main-item-detail"><strong>Customer Category:</strong> ${escapeHtml(customerCategoryLabel)} &nbsp; | &nbsp; <strong>System Type:</strong> ${escapeHtml(systemTypeLabel)}</div>`,
       mainItemPanelDetails
         ? `<div class="main-item-detail">1. Solar Panels Brand: ${escapeHtml(mainItemPanelDetails)}${panelQty > 0 ? ` (${panelQty} Qty)` : ""}</div>`
         : "",
@@ -821,6 +836,8 @@ const generateQuotationPDF = async (quotationData, customerData) => {
       <p><strong>Date:</strong> ${formatDate(quotationData.date)}</p>
       <p><strong>By:</strong> ${escapeHtml(ownerName)}</p>
       <p><strong>Plant Capacity:</strong> ${escapeHtml(quotationData.plantCapacity || "-")}</p>
+      <p><strong>Customer Category:</strong> ${escapeHtml(customerCategoryLabel)}</p>
+      <p><strong>System Type:</strong> ${escapeHtml(systemTypeLabel)}</p>
     </div>
   </div>
 </section>
