@@ -42,26 +42,40 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:4000',
+
+  'https://gujratsolar.netlify.app',
+  'https://darling-pasca-1cb4ec.netlify.app',
+
   process.env.FRONTEND_URL,
   process.env.CLIENT_URL,
-  'https://gujratsolar.netlify.app/',
-  //'https://darling-pasca-1cb4ec.netlify.app',
 ].filter(Boolean);
 
-// CORS Configuration
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
+      if (!origin) {
+        return callback(null, true);
+      }
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      return callback(new Error(`CORS blocked for origin: ${origin}`));
+      console.log('Blocked CORS Origin:', origin);
+
+      return callback(
+        new Error(`CORS blocked for origin: ${origin}`)
+      );
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    methods: [
+      'GET',
+      'POST',
+      'PUT',
+      'PATCH',
+      'DELETE',
+      'OPTIONS',
+    ],
     allowedHeaders: [
       'Content-Type',
       'Authorization',
@@ -71,7 +85,6 @@ app.use(
     exposedHeaders: ['Content-Disposition'],
   })
 );
-
 // Static Files
 app.use('/images', express.static(path.join(__dirname, 'public/images')));
 app.use(express.static(path.join(__dirname, 'public')));
