@@ -248,9 +248,9 @@ const EditQuotation = () => {
     if (
       name === 'plantCapacity' &&
       value !== '' &&
-      (Number(value) <= 0 || Number(value) > 20)
+      Number(value) <= 0
     ) {
-      setError('Plant capacity must be between 0 and 20 KW.');
+      setError('Plant capacity must be greater than 0 KW.');
     } else if (name === 'plantCapacity') {
       setError('');
     }
@@ -402,10 +402,9 @@ const EditQuotation = () => {
 
     if (
       !formData.plantCapacity ||
-      Number(formData.plantCapacity) <= 0 ||
-      Number(formData.plantCapacity) > 20
+      Number(formData.plantCapacity) <= 0
     ) {
-      setError('Plant capacity must be between 0 and 20 KW.');
+      setError('Plant capacity must be greater than 0 KW.');
       return;
     }
 
@@ -606,12 +605,11 @@ const EditQuotation = () => {
                 name="plantCapacity"
                 type="number"
                 min="0.1"
-                max="20"
                 step="any"
                 value={formData.plantCapacity}
                 onChange={handleInputChange}
                 disabled={!isEditable}
-                placeholder="Enter capacity in KW (max 20)"
+                placeholder="Enter capacity in KW"
               />
             </div>
 

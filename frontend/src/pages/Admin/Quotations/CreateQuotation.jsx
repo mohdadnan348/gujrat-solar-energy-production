@@ -50,7 +50,6 @@ const CreateQuotation = () => {
     plantCapacity: '',
     panelCount: 5,
     subsidyAmount: '',
-    perKwAmount: '',
     mainItem: {
       description: 'Custom BOM Based Quotation',
       panelDetails: '',
@@ -268,10 +267,9 @@ Net meter / Smart meter charge in your scope.`
 
     if (
       !formData.plantCapacity ||
-      Number(formData.plantCapacity) <= 0 ||
-      Number(formData.plantCapacity) > 20
+      Number(formData.plantCapacity) <= 0
     ) {
-      alert('Plant capacity must be between 0 and 20 KW.');
+      alert('Plant capacity must be greater than 0 KW.');
       return;
     }
 
@@ -296,7 +294,6 @@ Net meter / Smart meter charge in your scope.`
           formData.systemType !== 'OFF_GRID'
             ? formData.subsidyAmount
             : '',
-        perKwAmount: Number(formData.perKwAmount) || 0,
         materialTotalAmount: Number(materialTotalAmount) || 0,
         materialGstRate: Number(materialGstRate) || 0,
         gstType,
@@ -421,11 +418,10 @@ Net meter / Smart meter charge in your scope.`
               />
 
               <Input
-                label="Plant Capacity (KW) — Enter manually (Maximum 20 KW)"
+                label="Plant Capacity (KW) — Enter manually"
                 name="plantCapacity"
                 type="number"
                 min="0.1"
-                max="20"
                 step="any"
                 value={formData.plantCapacity}
                 onChange={handleInputChange}
@@ -473,15 +469,6 @@ Net meter / Smart meter charge in your scope.`
             </div>
 
             <div className="form-grid" style={{ marginTop: 15 }}>
-              <Input
-                label="Amount per KW (₹)"
-                name="perKwAmount"
-                type="number"
-                value={formData.perKwAmount}
-                onChange={handleInputChange}
-                placeholder="Enter rate per KW (optional)"
-              />
-
               <Input
                 label="Subsidy Note"
                 name="subsidyAmount"

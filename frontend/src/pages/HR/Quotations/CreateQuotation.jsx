@@ -108,7 +108,6 @@ const CreateQuotation = () => {
     plantCapacity: '',
     panelCount: 5,
     subsidyAmount: '',
-    perKwAmount: '',
     mainItem: {
       description: 'Custom BOM Based Quotation',
       panelDetails: '',
@@ -271,10 +270,9 @@ const CreateQuotation = () => {
 
     if (
       !formData.plantCapacity ||
-      Number(formData.plantCapacity) <= 0 ||
-      Number(formData.plantCapacity) > 20
+      Number(formData.plantCapacity) <= 0
     ) {
-      alert('Plant capacity must be between 0 and 20 KW.');
+      alert('Plant capacity must be greater than 0 KW.');
       return;
     }
 
@@ -299,7 +297,6 @@ const CreateQuotation = () => {
           formData.systemType !== 'OFF_GRID'
             ? formData.subsidyAmount
             : '',
-        perKwAmount: Number(formData.perKwAmount) || 0,
         materialTotalAmount: Number(materialTotalAmount) || 0,
         materialGstRate: Number(materialGstRate) || 0,
         gstType,
@@ -414,11 +411,10 @@ const CreateQuotation = () => {
               />
 
               <Input
-                label="Plant Capacity (KW) — Enter manually (Maximum 100 KW)"
+                label="Plant Capacity (KW) — Enter manually"
                 name="plantCapacity"
                 type="number"
                 min="0.1"
-                max="20"
                 step="any"
                 value={formData.plantCapacity}
                 onChange={handleInputChange}
@@ -466,15 +462,6 @@ const CreateQuotation = () => {
             </div>
 
             <div className="form-grid" style={{ marginTop: '15px' }}>
-              <Input
-                label="Amount per KW (₹)"
-                name="perKwAmount"
-                type="number"
-                value={formData.perKwAmount}
-                onChange={handleInputChange}
-                placeholder="Enter rate per KW (optional)"
-              />
-
               <Input
                 label="Subsidy Note"
                 name="subsidyAmount"

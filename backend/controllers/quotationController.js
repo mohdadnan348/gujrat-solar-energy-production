@@ -50,7 +50,7 @@ const createQuotation = catchAsync(async (req, res) => {
 
   const estimateNo = await generateEstimateNo();
   const capacityKw = Number.parseFloat(String(plantCapacity || '').replace(/[^0-9.]/g, '')) || 0;
-  if (capacityKw <= 0 || capacityKw > 20) return res.status(400).json(new ApiResponse(400, null, 'Plant capacity must be between 0 and 20 KW'));
+  if (capacityKw <= 0) return res.status(400).json(new ApiResponse(400, null, 'Plant capacity must be greater than 0 KW'));
   if (materialTotalAmount === undefined || materialTotalAmount === null || materialTotalAmount === '' || Number(materialTotalAmount) <= 0) return res.status(400).json(new ApiResponse(400, null, 'Quotation amount must be entered manually'));
   const resolvedPerKwAmount = Math.max(0, Number(perKwAmount) || 0);
   const resolvedMaterialAmount = Number(materialTotalAmount);
@@ -167,7 +167,7 @@ const updateQuotation = catchAsync(async (req, res) => {
     return res.status(400).json(new ApiResponse(400, null, `Cannot edit a quotation with status: ${quotation.status}`));
   }
 
-  if (req.body.plantCapacity !== undefined) { const kw = Number.parseFloat(String(req.body.plantCapacity).replace(/[^0-9.]/g, '')) || 0; if (kw <= 0 || kw > 20) return res.status(400).json(new ApiResponse(400, null, 'Plant capacity must be between 0 and 20 KW')); }
+  if (req.body.plantCapacity !== undefined) { const kw = Number.parseFloat(String(req.body.plantCapacity).replace(/[^0-9.]/g, '')) || 0; if (kw <= 0) return res.status(400).json(new ApiResponse(400, null, 'Plant capacity must be greater than 0 KW')); }
   if (req.body.materialTotalAmount !== undefined && Number(req.body.materialTotalAmount) <= 0) return res.status(400).json(new ApiResponse(400, null, 'Quotation amount must be entered manually'));
   if (req.body.customerCategory !== undefined) quotation.customerCategory = req.body.customerCategory;
   if (req.body.systemType !== undefined) quotation.systemType = req.body.systemType;
