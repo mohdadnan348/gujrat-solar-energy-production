@@ -107,6 +107,7 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     const companyEmail = settings.email || "";
     const gstin = settings.gstin || "";
     const ownerName = settings.ownerName || "Siddiqui Wasim";
+    const createdByName = quotationData.createdBy?.name || "-";
     const bank = settings.bankDetails || {};
     // Client-approved Terms & Conditions copied from reference quotation EST-00215.
     // Keep this wording consistent across quotations unless Admin updates the approved terms.
@@ -914,7 +915,7 @@ const generateQuotationPDF = async (quotationData, customerData) => {
       <div><span class="quote-label">Date:</span> ${formatDate(quotationData.date)}</div>
       <div><span class="quote-label">Expiry Date:</span> ${formatDate(quotationData.expiryDate)}</div>
       <div><span class="quote-label">Estimate#:</span> ${escapeHtml(quotationData.estimateNo || "-")}</div>
-      <div><span class="quote-label">Created by:</span> ${escapeHtml(ownerName)}</div>
+      <div><span class="quote-label">Created by:</span> ${escapeHtml(createdByName)}</div>
       <div><span class="quote-label">Contact:</span> ${escapeHtml(companyMobile)}</div>
     </div>
   </div>
