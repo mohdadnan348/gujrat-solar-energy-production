@@ -126,11 +126,13 @@ const createQuotation = catchAsync(async (req, res) => {
 // @route   GET /api/quotations
 // @access  Private
 const getQuotations = catchAsync(async (req, res) => {
-  if (req.user.role === 'Employee') {
-    return res.status(403).json(new ApiResponse(403, null, 'Not authorized to view quotations'));
-  }
+  const quotationFilter = req.user.role === 'Employee'
+    ? { createdBy: req.user._id }
+    : req.user.role === 'HR'
+      ? { $or: [{ ownerHR: req.user._id }, { createdBy: req.user._id }] }
+      : {};
 
-  const quotations = await Quotation.find(req.user.role === 'HR' ? { $or: [{ ownerHR: req.user._id }, { createdBy: req.user._id }] } : {})
+  const quotations = await Quotation.find(quotationFilter)
     .populate('customer', 'name mobile')
     .populate('createdBy', 'name')
     .sort({ createdAt: -1 });
@@ -149,6 +151,9 @@ const getQuotationById = catchAsync(async (req, res) => {
   if (!quotation) {
     return res.status(404).json(new ApiResponse(404, null, 'Quotation not found'));
   }
+  if (req.user.role === 'Employee' && String(quotation.createdBy?._id || quotation.createdBy) !== String(req.user._id)) {
+    return res.status(403).json(new ApiResponse(403, null, 'You can only view quotations created by you'));
+  }
 
   res.status(200).json(new ApiResponse(200, quotation, 'Quotation fetched successfully'));
 });
@@ -161,6 +166,10 @@ const updateQuotation = catchAsync(async (req, res) => {
 
   if (!quotation) {
     return res.status(404).json(new ApiResponse(404, null, 'Quotation not found'));
+  }
+
+  if (req.user.role === 'Employee' && String(quotation.createdBy) !== String(req.user._id)) {
+    return res.status(403).json(new ApiResponse(403, null, 'You can only edit quotations created by you'));
   }
 
   if (quotation.status !== 'Draft') {
@@ -278,6 +287,10 @@ const downloadQuotationPDF = catchAsync(async (req, res) => {
       return res.status(404).json(
         new ApiResponse(404, null, 'Quotation not found')
       );
+    }
+
+    if (req.user.role === 'Employee' && String(quotation.createdBy?._id || quotation.createdBy) !== String(req.user._id)) {
+      return res.status(403).json(new ApiResponse(403, null, 'You can only download quotations created by you'));
     }
 
     if (!quotation.customer) {

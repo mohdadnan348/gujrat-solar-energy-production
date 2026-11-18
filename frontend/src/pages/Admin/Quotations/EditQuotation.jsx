@@ -1090,7 +1090,7 @@ const EditQuotation = () => {
 
           <div className="form-grid">
 
-            {TERMS_FIELDS.map(field => (
+            {TERMS_FIELDS.filter(field => field.key !== 'batteryWarranty' || formData.systemType !== 'ON_GRID').map(field => (
               <div
                 key={field.key}
                 style={{ gridColumn: '1 / -1' }}

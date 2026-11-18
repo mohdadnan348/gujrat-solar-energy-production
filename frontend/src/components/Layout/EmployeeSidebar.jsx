@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   FiGrid, FiTarget, FiCheckSquare, FiClock,
-  FiCalendar, FiDollarSign, FiUser, FiBell, FiLogOut
+  FiCalendar, FiDollarSign, FiUser, FiBell, FiLogOut, FiFileText
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import './EmployeeSidebar.css';
@@ -29,6 +29,9 @@ const EmployeeSidebar = ({ isOpen, toggleSidebar }) => {
         </NavLink>
         <NavLink to="/employee/leads" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           <FiTarget className="nav-icon" /> <span>My Leads</span>
+        </NavLink>
+        <NavLink to="/employee/quotations" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          <FiFileText className="nav-icon" /> <span>My Quotations</span>
         </NavLink>
         <NavLink to="/employee/tasks" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           <FiCheckSquare className="nav-icon" /> <span>My Tasks</span>

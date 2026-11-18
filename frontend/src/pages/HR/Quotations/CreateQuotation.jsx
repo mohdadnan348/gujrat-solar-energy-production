@@ -651,7 +651,7 @@ const CreateQuotation = () => {
             {[
               'panelWarranty',
               'inverterWarranty',
-              'batteryWarranty',
+              ...(formData.systemType !== 'ON_GRID' ? ['batteryWarranty'] : []),
               'bosWarranty',
               'maintenanceWarranty',
               'warrantyNotes'
@@ -805,7 +805,7 @@ const CreateQuotation = () => {
             {[
               'panelWarranty',
               'inverterWarranty',
-              'batteryWarranty',
+              ...(formData.systemType !== 'ON_GRID' ? ['batteryWarranty'] : []),
               'bosWarranty',
               'maintenanceWarranty',
               'warrantyNotes'

@@ -672,7 +672,7 @@ Net meter / Smart meter charge in your scope.`
             {[
               'panelWarranty',
               'inverterWarranty',
-              'batteryWarranty',
+              ...(formData.systemType !== 'ON_GRID' ? ['batteryWarranty'] : []),
               'bosWarranty',
               'maintenanceWarranty',
               'warrantyNotes'
@@ -828,7 +828,7 @@ Net meter / Smart meter charge in your scope.`
             {[
               'panelWarranty',
               'inverterWarranty',
-              'batteryWarranty',
+              ...(formData.systemType !== 'ON_GRID' ? ['batteryWarranty'] : []),
               'bosWarranty',
               'maintenanceWarranty',
               'warrantyNotes'
