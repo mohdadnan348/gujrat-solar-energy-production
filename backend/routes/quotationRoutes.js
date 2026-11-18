@@ -9,8 +9,10 @@ const { authorize } = require('../middlewares/roleMiddleware');
 
 router.use(protect);
 router.use(authorize('Admin', 'HR', 'Employee'));
+
 router.route('/').post(createQuotation).get(getQuotations);
 router.route('/:id').get(getQuotationById).put(updateQuotation);
-router.route('/:id/status').put(authorize('Admin', 'HR'), updateQuotationStatus);
-router.route('/:id/pdf').get(downloadQuotationPDF);
+router.put('/:id/status', authorize('Admin', 'HR'), updateQuotationStatus);
+router.get('/:id/pdf', downloadQuotationPDF);
+
 module.exports = router;

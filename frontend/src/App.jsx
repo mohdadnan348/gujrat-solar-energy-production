@@ -48,6 +48,12 @@ import HRInvoiceList from "./pages/HR/Invoices/InvoiceList";
 import HRCreateInvoice from "./pages/HR/Invoices/CreateInvoice";
 import HRInvoiceView from "./pages/HR/Invoices/InvoiceView";
 
+// ================= EMPLOYEE QUOTATION PAGES =================
+import EmployeeQuotationList from "./pages/Employee/Quotations/QuotationList";
+import EmployeeCreateQuotation from "./pages/Employee/Quotations/CreateQuotation";
+import EmployeeQuotationView from "./pages/Employee/Quotations/QuotationView";
+import EmployeeEditQuotation from "./pages/Employee/Quotations/EditQuotation";
+
 // ================= EMPLOYEE PAGES =================
 import EmployeeDashboard from "./pages/Employee/Dashboard/EmployeeDashboard";
 import MyLeads from "./pages/Employee/MyLeads/MyLeads";
@@ -297,6 +303,27 @@ function App() {
           <Route
             path="/employee/dashboard"
             element={<EmployeeLayout><EmployeeDashboard /></EmployeeLayout>}
+          />
+
+          <Route
+            path="/employee/quotations"
+            element={<EmployeeLayout><EmployeeQuotationList /></EmployeeLayout>}
+          />
+          <Route
+            path="/employee/quotations/create"
+            element={<EmployeeLayout><EmployeeCreateQuotation /></EmployeeLayout>}
+          />
+          <Route
+            path="/employee/quotations/:id"
+            element={<EmployeeLayout><EmployeeQuotationView /></EmployeeLayout>}
+          />
+          <Route
+            path="/employee/quotations/view/:id"
+            element={<EmployeeLayout><EmployeeQuotationView /></EmployeeLayout>}
+          />
+          <Route
+            path="/employee/quotations/edit/:id"
+            element={<EmployeeLayout><EmployeeEditQuotation /></EmployeeLayout>}
           />
 
           <Route

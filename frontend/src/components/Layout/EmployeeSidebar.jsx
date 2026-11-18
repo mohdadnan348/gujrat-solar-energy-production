@@ -30,11 +30,11 @@ const EmployeeSidebar = ({ isOpen, toggleSidebar }) => {
         <NavLink to="/employee/leads" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           <FiTarget className="nav-icon" /> <span>My Leads</span>
         </NavLink>
-        <NavLink to="/employee/quotations" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          <FiFileText className="nav-icon" /> <span>My Quotations</span>
-        </NavLink>
         <NavLink to="/employee/tasks" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           <FiCheckSquare className="nav-icon" /> <span>My Tasks</span>
+        </NavLink>
+        <NavLink to="/employee/quotations" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          <FiFileText className="nav-icon" /> <span>My Quotations</span>
         </NavLink>
         <NavLink to="/employee/attendance" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           <FiClock className="nav-icon" /> <span>My Attendance</span>

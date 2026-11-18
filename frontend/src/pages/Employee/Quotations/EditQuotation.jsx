@@ -1,12 +1,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  FiSave,
-  FiArrowLeft,
-  FiPlus,
-  FiTrash2
-} from 'react-icons/fi';
+import { FiSave, FiArrowLeft, FiPlus, FiTrash2 } from 'react-icons/fi';
 
 import Input from '../../../components/Common/Input';
 import Button from '../../../components/Common/Button';
@@ -79,10 +74,9 @@ const initialMainItem = {
   totalAmountWithTax: 0
 };
 
-const TERMS_FIELDS = [
+const TERM_FIELDS = [
   { key: 'generalTerms', label: 'General Terms' },
   { key: 'governmentSubsidy', label: 'Government Subsidy' },
-  { key: 'warrantyDetails', label: 'Warranty Details' },
   { key: 'panelWarranty', label: 'Solar Panel Warranty' },
   { key: 'inverterWarranty', label: 'Inverter Warranty' },
   { key: 'batteryWarranty', label: 'Battery Warranty' },
@@ -135,7 +129,7 @@ const EditQuotation = () => {
   const [bomItems, setBomItems] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
 
-  // Fetch quotation details
+  // FETCH QUOTATION
   useEffect(() => {
     let isMounted = true;
 
@@ -162,10 +156,7 @@ const EditQuotation = () => {
 
         setFormData({
           leadName: data.leadName || '',
-
-          plantCapacity: String(data.plantCapacity || '')
-            .replace(/\s*KW\s*$/i, ''),
-
+          plantCapacity: String(data.plantCapacity || '').replace(/\s*KW\s*$/i, ''),
           customerCategory: data.customerCategory || 'RESIDENTIAL',
           systemType: data.systemType || 'ON_GRID',
           batteryIncluded: Boolean(data.batteryIncluded),
@@ -191,7 +182,6 @@ const EditQuotation = () => {
           subTotal: Number(data.subTotal) || 0,
           gstAmount: Number(data.gstAmount) || 0,
           grandTotal: Number(data.grandTotal) || 0,
-
           subsidyAmount: data.subsidyAmount || '',
 
           termsAndConditions: {
@@ -202,28 +192,30 @@ const EditQuotation = () => {
         });
 
         setBomItems(
-          (data.bom || []).map((item, index) => {
-            const qty = Number(item.qty) || 0;
-            const rate = Number(item.rate) || 0;
-            const gstRate = Number(item.gstRate) || 0;
-
-            const baseAmount = qty * rate;
-            const gstAmount = baseAmount * gstRate / 100;
-
-            return {
-              srNo: item.srNo || String(index + 1),
-              itemDescription: item.itemDescription || '',
-              qty,
-              unit: item.unit || 'Nos',
-              brand: item.brand || '',
-              rate,
-              gstRate,
-              gstAmount: Number(gstAmount.toFixed(2)),
-              total: Number((baseAmount + gstAmount).toFixed(2))
-            };
-          })
+          (data.bom || []).map((item, index) => ({
+            srNo: item.srNo || String(index + 1),
+            itemDescription: item.itemDescription || '',
+            qty: Number(item.qty) || 0,
+            unit: item.unit || 'Nos',
+            brand: item.brand || '',
+            rate: Number(item.rate) || 0,
+            gstRate: Number(item.gstRate) || 0,
+            gstAmount: Number(
+              (
+                (Number(item.qty) || 0) *
+                (Number(item.rate) || 0) *
+                (Number(item.gstRate) || 0) / 100
+              ).toFixed(2)
+            ),
+            total: Number(
+              (
+                (Number(item.qty) || 0) *
+                (Number(item.rate) || 0) *
+                (1 + (Number(item.gstRate) || 0) / 100)
+              ).toFixed(2)
+            )
+          }))
         );
-
       } catch (err) {
         if (isMounted) {
           setError(
@@ -233,9 +225,7 @@ const EditQuotation = () => {
           );
         }
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (isMounted) setIsLoading(false);
       }
     };
 
@@ -246,7 +236,7 @@ const EditQuotation = () => {
     };
   }, [id]);
 
-  // General input handler
+  // INPUT HANDLERS
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
@@ -266,7 +256,6 @@ const EditQuotation = () => {
     }
   };
 
-  // Main item handler
   const handleMainItemChange = (e) => {
     const { name, value } = e.target;
 
@@ -279,7 +268,18 @@ const EditQuotation = () => {
     }));
   };
 
-  // BOM handlers
+  // TERMS HANDLER
+  const handleTermChange = (key, value) => {
+    setFormData(prev => ({
+      ...prev,
+      termsAndConditions: {
+        ...prev.termsAndConditions,
+        [key]: value
+      }
+    }));
+  };
+
+  // BOM HANDLERS
   const handleBomChange = (index, field, value) => {
     setBomItems(prev =>
       prev.map((item, i) => {
@@ -334,7 +334,7 @@ const EditQuotation = () => {
     );
   };
 
-  // GST calculations
+  // GST CALCULATION
   const totals = useMemo(() => {
     const amount = Number(formData.materialTotalAmount) || 0;
     const rate = Math.max(0, Number(formData.materialGstRate) || 0);
@@ -342,11 +342,13 @@ const EditQuotation = () => {
     const gstAmount =
       formData.gstType === 'NONE'
         ? 0
-        : Number((
-            formData.gstMode === 'INCLUDED'
-              ? amount - amount / (1 + rate / 100)
-              : amount * rate / 100
-          ).toFixed(2));
+        : Number(
+            (
+              formData.gstMode === 'INCLUDED'
+                ? amount - amount / (1 + rate / 100)
+                : amount * rate / 100
+            ).toFixed(2)
+          );
 
     const subTotal =
       formData.gstMode === 'INCLUDED'
@@ -366,11 +368,13 @@ const EditQuotation = () => {
     const igstAmount =
       formData.gstType === 'IGST' ? gstAmount : 0;
 
-    const grandTotal = Number((
-      formData.gstMode === 'INCLUDED'
-        ? amount
-        : amount + gstAmount
-    ).toFixed(2));
+    const grandTotal = Number(
+      (
+        formData.gstMode === 'INCLUDED'
+          ? amount
+          : amount + gstAmount
+      ).toFixed(2)
+    );
 
     return {
       subTotal,
@@ -387,18 +391,7 @@ const EditQuotation = () => {
     formData.gstMode
   ]);
 
-  // Terms and conditions handler
-  const handleTermsChange = (key, value) => {
-    setFormData(prev => ({
-      ...prev,
-      termsAndConditions: {
-        ...prev.termsAndConditions,
-        [key]: value
-      }
-    }));
-  };
-
-  // Update quotation
+  // UPDATE QUOTATION
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -407,15 +400,18 @@ const EditQuotation = () => {
       return;
     }
 
-    const capacity = Number(formData.plantCapacity);
-    const amount = Number(formData.materialTotalAmount);
-
-    if (!capacity || capacity <= 0) {
+    if (
+      !formData.plantCapacity ||
+      Number(formData.plantCapacity) <= 0
+    ) {
       setError('Plant capacity must be greater than 0 KW.');
       return;
     }
 
-    if (!amount || amount <= 0) {
+    if (
+      !formData.materialTotalAmount ||
+      Number(formData.materialTotalAmount) <= 0
+    ) {
       setError('Please enter quotation amount manually.');
       return;
     }
@@ -427,11 +423,11 @@ const EditQuotation = () => {
 
       const payload = {
         leadName: formData.leadName,
-        plantCapacity: `${capacity} KW`,
+        plantCapacity: `${formData.plantCapacity} KW`,
         customerCategory: formData.customerCategory,
         systemType: formData.systemType,
         batteryIncluded: formData.systemType !== 'ON_GRID',
-        panelCount: Number(formData.panelCount) || 0,
+        panelCount: Number(formData.panelCount),
 
         expiryDate: formData.expiryDate || undefined,
 
@@ -443,7 +439,7 @@ const EditQuotation = () => {
             Number(formData.mainItem.totalAmountWithTax) || 0
         },
 
-        materialTotalAmount: amount,
+        materialTotalAmount: Number(formData.materialTotalAmount) || 0,
         perKwAmount: Number(formData.perKwAmount) || 0,
 
         gstMode: formData.gstMode,
@@ -453,7 +449,6 @@ const EditQuotation = () => {
         cgstAmount: totals.cgstAmount,
         sgstAmount: totals.sgstAmount,
         igstAmount: totals.igstAmount,
-
         subTotal: totals.subTotal,
         gstAmount: totals.gstAmount,
         grandTotal: totals.grandTotal,
@@ -474,10 +469,10 @@ const EditQuotation = () => {
           qty: Number(item.qty) || 0,
           unit: item.unit,
           brand: item.brand,
-          rate: 0,
-          gstRate: 0,
-          gstAmount: 0,
-          total: 0
+          rate: Number(item.rate) || 0,
+          gstRate: Number(item.gstRate) || 0,
+          gstAmount: Number(item.gstAmount) || 0,
+          total: Number(item.total) || 0
         }))
       };
 
@@ -488,7 +483,6 @@ const EditQuotation = () => {
       setTimeout(() => {
         navigate(`/employee/quotations/view/${id}`);
       }, 1000);
-
     } catch (err) {
       console.error('Quotation Update Error:', err);
 
@@ -520,11 +514,9 @@ const EditQuotation = () => {
 
   return (
     <div className="edit-quotation-page">
-
       <div className="page-top-bar">
         <button
           className="back-btn"
-          type="button"
           onClick={() => navigate('/employee/quotations')}
         >
           <FiArrowLeft />
@@ -578,16 +570,13 @@ const EditQuotation = () => {
         onSubmit={handleSubmit}
         className="quotation-form"
       >
-
         {/* SECTION 1: CUSTOMER DETAILS */}
-
         <div className="form-card">
           <h3 className="section-title">
-            1. Customer &amp; System Details
+            1. Customer & System Details
           </h3>
 
           <div className="form-grid">
-
             <div>
               <label>Customer Name</label>
               <p>
@@ -629,15 +618,17 @@ const EditQuotation = () => {
               <select
                 value={formData.customerCategory}
                 disabled={!isEditable}
-                onChange={e => setFormData(prev => ({
-                  ...prev,
-                  customerCategory: e.target.value,
-                  subsidyAmount:
-                    e.target.value === 'RESIDENTIAL' &&
-                    prev.systemType !== 'OFF_GRID'
-                      ? prev.subsidyAmount
-                      : ''
-                }))}
+                onChange={e =>
+                  setFormData(prev => ({
+                    ...prev,
+                    customerCategory: e.target.value,
+                    subsidyAmount:
+                      e.target.value === 'RESIDENTIAL' &&
+                      prev.systemType !== 'OFF_GRID'
+                        ? prev.subsidyAmount
+                        : ''
+                  }))
+                }
                 style={{
                   minHeight: 44,
                   width: '100%',
@@ -657,16 +648,18 @@ const EditQuotation = () => {
               <select
                 value={formData.systemType}
                 disabled={!isEditable}
-                onChange={e => setFormData(prev => ({
-                  ...prev,
-                  systemType: e.target.value,
-                  batteryIncluded: e.target.value !== 'ON_GRID',
-                  subsidyAmount:
-                    prev.customerCategory === 'RESIDENTIAL' &&
-                    e.target.value !== 'OFF_GRID'
-                      ? prev.subsidyAmount
-                      : ''
-                }))}
+                onChange={e =>
+                  setFormData(prev => ({
+                    ...prev,
+                    systemType: e.target.value,
+                    batteryIncluded: e.target.value !== 'ON_GRID',
+                    subsidyAmount:
+                      prev.customerCategory === 'RESIDENTIAL' &&
+                      e.target.value !== 'OFF_GRID'
+                        ? prev.subsidyAmount
+                        : ''
+                  }))
+                }
                 style={{
                   minHeight: 44,
                   width: '100%',
@@ -686,7 +679,6 @@ const EditQuotation = () => {
               <Input
                 name="panelCount"
                 type="number"
-                min="0"
                 value={formData.panelCount}
                 onChange={handleInputChange}
                 disabled={!isEditable}
@@ -703,30 +695,29 @@ const EditQuotation = () => {
                 disabled={!isEditable}
               />
             </div>
-
           </div>
         </div>
 
-        {/* SECTION 2: MATERIAL PRICING */}
-
+        {/* SECTION 2: PRICING */}
         <div className="form-card">
           <h3 className="section-title">
             2. Combined Material Pricing
           </h3>
 
           <div className="form-grid" style={{ alignItems: 'end' }}>
-
             <Input
               label="Amount per KW (₹)"
               type="number"
               value={formData.perKwAmount}
               disabled={!isEditable}
-              onChange={e => handleInputChange({
-                target: {
-                  name: 'perKwAmount',
-                  value: e.target.value
-                }
-              })}
+              onChange={e =>
+                handleInputChange({
+                  target: {
+                    name: 'perKwAmount',
+                    value: e.target.value
+                  }
+                })
+              }
             />
 
             <Input
@@ -734,24 +725,27 @@ const EditQuotation = () => {
               type="number"
               value={formData.materialTotalAmount}
               disabled={!isEditable}
-              onChange={e => setFormData(prev => ({
-                ...prev,
-                materialTotalAmount: e.target.value
-              }))}
+              onChange={e =>
+                setFormData(prev => ({
+                  ...prev,
+                  materialTotalAmount: e.target.value
+                }))
+              }
             />
 
-            <label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               GST Type
               <select
                 value={formData.gstType}
                 disabled={!isEditable}
-                onChange={e => setFormData(prev => ({
-                  ...prev,
-                  gstType: e.target.value
-                }))}
+                onChange={e =>
+                  setFormData(prev => ({
+                    ...prev,
+                    gstType: e.target.value
+                  }))
+                }
                 style={{
                   minHeight: 44,
-                  width: '100%',
                   border: '1px solid #ddd',
                   borderRadius: 8,
                   padding: '0 12px'
@@ -764,30 +758,33 @@ const EditQuotation = () => {
             </label>
 
             <Input
-              label="GST Percentage"
+              label="GST Percentage (any value)"
               type="number"
               min="0"
               step="any"
               value={formData.materialGstRate}
               disabled={!isEditable}
-              onChange={e => setFormData(prev => ({
-                ...prev,
-                materialGstRate: e.target.value
-              }))}
+              onChange={e =>
+                setFormData(prev => ({
+                  ...prev,
+                  materialGstRate: e.target.value
+                }))
+              }
             />
 
-            <label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               GST Calculation
               <select
                 value={formData.gstMode}
                 disabled={!isEditable}
-                onChange={e => setFormData(prev => ({
-                  ...prev,
-                  gstMode: e.target.value
-                }))}
+                onChange={e =>
+                  setFormData(prev => ({
+                    ...prev,
+                    gstMode: e.target.value
+                  }))
+                }
                 style={{
                   minHeight: 44,
-                  width: '100%',
                   border: '1px solid #ddd',
                   borderRadius: 8,
                   padding: '0 12px'
@@ -797,11 +794,9 @@ const EditQuotation = () => {
                 <option value="INCLUDED">GST Included in Amount</option>
               </select>
             </label>
-
           </div>
 
           <div className="summary-box">
-
             <div className="summary-row">
               <span>
                 {formData.gstMode === 'INCLUDED'
@@ -835,9 +830,7 @@ const EditQuotation = () => {
               </>
             ) : formData.gstType === 'IGST' ? (
               <div className="summary-row">
-                <span>
-                  IGST ({Number(formData.materialGstRate)}%):
-                </span>
+                <span>IGST ({formData.materialGstRate}%):</span>
                 <strong>
                   ₹ {totals.igstAmount.toLocaleString('en-IN')}
                 </strong>
@@ -855,7 +848,6 @@ const EditQuotation = () => {
                 ₹ {totals.grandTotal.toLocaleString('en-IN')}
               </strong>
             </div>
-
           </div>
 
           <div style={{ marginTop: 20 }}>
@@ -875,24 +867,24 @@ const EditQuotation = () => {
         </div>
 
         {/* SECTION 3: TESTIMONIALS */}
-
         <div className="form-card">
-          <h3 className="section-title">Testimonials</h3>
+          <h3 className="section-title">3. Testimonials</h3>
 
           {testimonials.map((item, index) => (
             <div className="testimonial-editor" key={index}>
-
               <Input
                 label={`Customer ${index + 1}`}
                 value={item.name || ''}
                 disabled={!isEditable}
-                onChange={e => setTestimonials(prev =>
-                  prev.map((t, i) =>
-                    i === index
-                      ? { ...t, name: e.target.value }
-                      : t
+                onChange={e =>
+                  setTestimonials(prev =>
+                    prev.map((t, i) =>
+                      i === index
+                        ? { ...t, name: e.target.value }
+                        : t
+                    )
                   )
-                )}
+                }
               />
 
               <label>
@@ -901,13 +893,15 @@ const EditQuotation = () => {
                   rows="3"
                   disabled={!isEditable}
                   value={item.text || ''}
-                  onChange={e => setTestimonials(prev =>
-                    prev.map((t, i) =>
-                      i === index
-                        ? { ...t, text: e.target.value }
-                        : t
+                  onChange={e =>
+                    setTestimonials(prev =>
+                      prev.map((t, i) =>
+                        i === index
+                          ? { ...t, text: e.target.value }
+                          : t
+                      )
                     )
-                  )}
+                  }
                 />
               </label>
 
@@ -915,14 +909,15 @@ const EditQuotation = () => {
                 <button
                   type="button"
                   className="remove-btn"
-                  onClick={() => setTestimonials(prev =>
-                    prev.filter((_, i) => i !== index)
-                  )}
+                  onClick={() =>
+                    setTestimonials(prev =>
+                      prev.filter((_, i) => i !== index)
+                    )
+                  }
                 >
                   Remove
                 </button>
               )}
-
             </div>
           ))}
 
@@ -930,23 +925,23 @@ const EditQuotation = () => {
             <Button
               type="button"
               variant="secondary"
-              onClick={() => setTestimonials(prev => [
-                ...prev,
-                { name: '', text: '', rating: 5 }
-              ])}
+              onClick={() =>
+                setTestimonials(prev => [
+                  ...prev,
+                  { name: '', text: '', rating: 5 }
+                ])
+              }
             >
               Add Testimonial
             </Button>
           )}
         </div>
 
-        {/* SECTION 4: BILL OF MATERIAL */}
-
+        {/* SECTION 4: BOM */}
         <div className="form-card">
-
           <div className="section-header-row">
             <h3 className="section-title">
-              3. Bill of Material (BOM)
+              4. Bill of Material (BOM)
             </h3>
 
             {isEditable && (
@@ -964,7 +959,6 @@ const EditQuotation = () => {
 
           <div className="bom-table-container">
             <table className="bom-table">
-
               <thead>
                 <tr>
                   <th>Sr No.</th>
@@ -979,16 +973,13 @@ const EditQuotation = () => {
               <tbody>
                 {bomItems.map((item, index) => (
                   <tr key={index}>
-
                     <td>
                       <input
                         value={item.srNo}
                         disabled={!isEditable}
-                        onChange={e => handleBomChange(
-                          index,
-                          'srNo',
-                          e.target.value
-                        )}
+                        onChange={e =>
+                          handleBomChange(index, 'srNo', e.target.value)
+                        }
                       />
                     </td>
 
@@ -996,11 +987,13 @@ const EditQuotation = () => {
                       <input
                         value={item.itemDescription}
                         disabled={!isEditable}
-                        onChange={e => handleBomChange(
-                          index,
-                          'itemDescription',
-                          e.target.value
-                        )}
+                        onChange={e =>
+                          handleBomChange(
+                            index,
+                            'itemDescription',
+                            e.target.value
+                          )
+                        }
                       />
                     </td>
 
@@ -1010,11 +1003,9 @@ const EditQuotation = () => {
                         min="0"
                         value={item.qty}
                         disabled={!isEditable}
-                        onChange={e => handleBomChange(
-                          index,
-                          'qty',
-                          e.target.value
-                        )}
+                        onChange={e =>
+                          handleBomChange(index, 'qty', e.target.value)
+                        }
                       />
                     </td>
 
@@ -1022,11 +1013,9 @@ const EditQuotation = () => {
                       <input
                         value={item.unit}
                         disabled={!isEditable}
-                        onChange={e => handleBomChange(
-                          index,
-                          'unit',
-                          e.target.value
-                        )}
+                        onChange={e =>
+                          handleBomChange(index, 'unit', e.target.value)
+                        }
                       />
                     </td>
 
@@ -1034,11 +1023,9 @@ const EditQuotation = () => {
                       <input
                         value={item.brand}
                         disabled={!isEditable}
-                        onChange={e => handleBomChange(
-                          index,
-                          'brand',
-                          e.target.value
-                        )}
+                        onChange={e =>
+                          handleBomChange(index, 'brand', e.target.value)
+                        }
                       />
                     </td>
 
@@ -1053,7 +1040,6 @@ const EditQuotation = () => {
                         </button>
                       </td>
                     )}
-
                   </tr>
                 ))}
 
@@ -1064,42 +1050,42 @@ const EditQuotation = () => {
                     </td>
                   </tr>
                 )}
-
               </tbody>
             </table>
           </div>
         </div>
 
         {/* SECTION 5: TERMS AND CONDITIONS */}
-
         <div className="form-card terms-edit-card">
-
           <h3 className="section-title">
-            4. Terms &amp; Conditions
+            5. Terms &amp; Conditions
           </h3>
 
-          <p style={{
-            color: '#64748b',
-            fontSize: 13,
-            marginTop: -6,
-            marginBottom: 16
-          }}>
+          <p
+            style={{
+              color: '#64748b',
+              fontSize: 13,
+              marginTop: -6,
+              marginBottom: 16
+            }}
+          >
             Edit the terms below. These saved values are used when the
             quotation PDF is generated.
           </p>
 
           <div className="form-grid">
-
-            {TERMS_FIELDS.filter(field => field.key !== 'batteryWarranty' || formData.systemType !== 'ON_GRID').map(field => (
+            {TERM_FIELDS.map(field => (
               <div
                 key={field.key}
                 style={{ gridColumn: '1 / -1' }}
               >
-                <label style={{
-                  display: 'block',
-                  fontWeight: 600,
-                  marginBottom: 7
-                }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontWeight: 600,
+                    marginBottom: 7
+                  }}
+                >
                   {field.label}
                 </label>
 
@@ -1108,10 +1094,9 @@ const EditQuotation = () => {
                   value={
                     formData.termsAndConditions?.[field.key] || ''
                   }
-                  onChange={e => handleTermsChange(
-                    field.key,
-                    e.target.value
-                  )}
+                  onChange={e =>
+                    handleTermChange(field.key, e.target.value)
+                  }
                   disabled={!isEditable}
                   rows={4}
                   placeholder={`Enter ${field.label.toLowerCase()}...`}
@@ -1130,9 +1115,43 @@ const EditQuotation = () => {
               </div>
             ))}
 
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontWeight: 600,
+                  marginBottom: 7
+                }}
+              >
+                Warranty Details
+              </label>
+
+              <textarea
+                name="warrantyDetails"
+                value={
+                  formData.termsAndConditions?.warrantyDetails || ''
+                }
+                onChange={e =>
+                  handleTermChange('warrantyDetails', e.target.value)
+                }
+                disabled={!isEditable}
+                rows={3}
+                placeholder="Enter warranty details..."
+                style={{
+                  width: '100%',
+                  minHeight: 86,
+                  padding: 12,
+                  border: '1px solid #d1d5db',
+                  borderRadius: 8,
+                  resize: 'vertical',
+                  font: 'inherit',
+                  background: isEditable ? '#fff' : '#f8fafc',
+                  color: '#1f2937'
+                }}
+              />
+            </div>
           </div>
         </div>
-
       </form>
     </div>
   );

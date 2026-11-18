@@ -11,6 +11,8 @@ import customerService from '../../../services/customerService';
 import quotationService from '../../../services/quotationService';
 import './CreateQuotation.css';
 
+
+// MASTER LISTS
 const UNIT_OPTIONS = [
   { label: 'Set', value: 'Set' },
   { label: 'Nos', value: 'Nos' },
@@ -33,6 +35,61 @@ const BRAND_OPTIONS = [
   'Aluminium', 'MCB', 'SPD', 'DCBB', 'ACDB'
 ];
 
+// DEFAULT TERMS AND CONDITIONS
+const DEFAULT_TERMS_AND_CONDITIONS = {
+  generalTerms: `Material dispatch and Installation shall be started upon DISCOM approval only.
+For better performance, solar panels should be cleaned by customer two times in a week.
+Concealed wiring shall be done by company, if possible only. Otherwise, customer should do concealed wiring with their wiremen where material shall be provided by Company.
+After successful installation, Customer shall take care of solar plant by doing timely cleaning. If we found less generation at the time of attending complaint due to non-cleaning, we may charge you additional service charge.
+There is manufacturing warranty for all electronics equipment. Company will help to claim this warranty if require.`,
+
+  governmentSubsidy: `Subsidy Credit: If applicable, any subsidy will be directly credited to the customer's account. Our company will handle all necessary documentation with the government.
+Delay Disclaimer: Please note that subsidy amounts may experience delays from the government's side. Our company is not liable to compensate for any delays or non-receipt of subsidies if not provided by the government.`,
+
+  panelWarranty: `90% of rated capacity for the first 15 years.
+80% of rated capacity for the next 15 years.
+Total Panel Life: 30 years.
+Refer Solar Panel Datasheet for detailed warranty terms.`,
+
+  inverterWarranty: `12 years, extendable.
+Refer Inverter Datasheet for detailed warranty terms.`,
+
+  batteryWarranty: `8 years, Extendable.
+Refer Battery Datasheet for detailed warranty terms.`,
+
+  bosWarranty: `Equipment/products supplied by us which are warranted against defects due to poor material, design, or workmanship.
+This warranty is valid for 12 months from the date of commissioning or when put into service, whichever is earlier.`,
+
+  maintenanceWarranty: `We offer 5 years of O&M support, including fault finding, remote monitoring, site visits, and assistance with warranty claims for components.
+O&M does not include solar panel cleaning and washing.`,
+
+  warrantyNotes: `All warranties provided by the manufacturer/supplier are in favor of the buyer and cover the equipment for the specified period.
+Warranties ensure safe working of individual components and vary in validity period.
+Warranties do not cover damages caused by external hazardous conditions.`,
+
+  siteCompletionSchedule: `Dispatch within 6 weeks after order confirmation with payment.
+The entire power plant will be installed and commissioned within 60-70 days (approx.) after project accreditation, contract agreement, and possession of the site.`,
+
+  paymentTerms: `50% advance payment upon contract signing.
+40% upon delivery of structure material.
+10% before meter installation is complete.`,
+
+  warrantyExclusions: `Damage or defect caused by transportation, accident, misuse, lack of maintenance, improper usage, or negligence by the owner.
+Wilful damage, normal wear and tear, abuse, or misuse of equipment/product.
+Damage or defect caused by Force Majeure events, including fire, earthquake, flood, or other natural disasters.
+Damage or defect caused by unauthorized alterations, modifications, or conversions.
+Repairs carried out by personnel not authorized by the contractor.
+Defects or damages due to external causes.
+Parts and components repaired or replaced during the warranty period are warranted only for the original warranty period. The contractor will take back replaced or defective material.`,
+
+  scopeOfWork: `Providing access/approach to rooftop.
+If any electrical modification is required from DISCOM (i.e. ELCB, changeover switch etc.) Customer shall provide necessary support.
+Provide necessary documents for project approvals from State/Central Government.
+Site clearance, ladders, water, and electricity supply for smooth installation and commissioning of the project.
+Customer shall provide Safe Place for Material unloading and storage during the work execution.
+Net meter / Smart meter charge in your scope.`
+};
+
 const CreateQuotation = () => {
   const navigate = useNavigate();
 
@@ -41,6 +98,7 @@ const CreateQuotation = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
 
+  // FORM STATE
   const [formData, setFormData] = useState({
     customerId: '',
     customerCategory: 'RESIDENTIAL',
@@ -60,6 +118,7 @@ const CreateQuotation = () => {
     }
   });
 
+  // BILL OF MATERIAL
   const [bomItems, setBomItems] = useState([
     { srNo: '1', itemDescription: 'Solar Panels (PV Modules)', qty: 1, unit: 'Set', rate: 0, gstRate: 5, gstAmount: 0, total: 0, brand: 'Adani/Waaree/TATA/Sanora/Satvik/ORB/Loom' },
     { srNo: '2', itemDescription: 'Solar String Inverter', qty: 1, unit: 'Nos', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Qbits/Waaree/TATA/Sanora/Havells/Polycab/Envergy' },
@@ -78,82 +137,20 @@ const CreateQuotation = () => {
     { srNo: '8.3', itemDescription: 'Lugs Ring Type As per wiring requirements', qty: 1, unit: 'Set', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Copper/Aluminium' }
   ]);
 
+  // SUMMARY
   const [materialTotalAmount, setMaterialTotalAmount] = useState('');
   const [materialGstRate, setMaterialGstRate] = useState('');
   const [gstType, setGstType] = useState('CGST_SGST');
   const [gstMode, setGstMode] = useState('EXTRA');
 
-  // Multiline terms use template literals to avoid unterminated string errors.
   const [termsAndConditions, setTermsAndConditions] = useState({
-    generalTerms: `Material dispatch and Installation shall be started upon DISCOM approval only.
-For better performance, solar panels should be cleaned by customer two times in a week.
-Concealed wiring shall be done by company, if possible only. Otherwise, customer should do concealed wiring with their wiremen where material shall be provided by Company.
-After successful installation, Customer shall take care of solar plant by doing timely cleaning. If we found less generation at the time of attending complaint due to non-cleaning, we may charge you additional service charge.
-There is manufacturing warranty for all electronics equipment. Company will help to claim this warranty if require.`,
-
-    governmentSubsidy: `Subsidy Credit: If applicable, any subsidy will be directly credited to the customer's account. Our company will handle all necessary documentation with the government.
-Delay Disclaimer: Please note that subsidy amounts may experience delays from the government's side. Our company is not liable to compensate for any delays or non-receipt of subsidies if not provided by the government.`,
-
-    panelWarranty: `90% of rated capacity for the first 15 years.
-80% of rated capacity for the next 15 years.
-Total Panel Life: 30 years.
-Refer Solar Panel Datasheet for detailed warranty terms.`,
-
-    inverterWarranty: `12 years, extendable.
-Refer Inverter Datasheet for detailed warranty terms.`,
-
-    batteryWarranty: `8 years, Extendable.
-Refer Battery Datasheet for detailed warranty terms.`,
-
-    bosWarranty: `Equipment/products supplied by us which are warranted against defects due to poor material, design, or workmanship.
-This warranty is valid for 12 months from the date of commissioning or when put into service, whichever is earlier.`,
-
-    maintenanceWarranty: `We offer 5 years of O&M support, including fault finding, remote monitoring, site visits, and assistance with warranty claims for components.
-O&M does not include solar panel cleaning and washing.`,
-
-    warrantyNotes: `All warranties provided by the manufacturer/supplier are in favor of the buyer and cover the equipment for the specified period.
-Warranties ensure safe working of individual components and vary in validity period.
-Warranties do not cover damages caused by external hazardous conditions.`,
-
-    siteCompletionSchedule: `Dispatch within 6 weeks after order confirmation with payment.
-The entire power plant will be installed and commissioned within 60-70 days (approx.) after project accreditation, contract agreement, and possession of the site.`,
-
-    paymentTerms: `50% advance payment upon contract signing.
-40% upon delivery of structure material.
-10% before meter installation is complete.`,
-
-    warrantyExclusions: `Damage or defect caused by transportation, accident, misuse, lack of maintenance, improper usage, or negligence by the owner.
-Wilful damage, normal wear and tear, abuse, or misuse of equipment/product.
-Damage or defect caused by Force Majeure events, including fire, earthquake, flood, or other natural disasters.
-Damage or defect caused by unauthorized alterations, modifications, or conversions.
-Repairs carried out by personnel not authorized by the contractor.
-Defects or damages due to external causes.
-Parts and components repaired or replaced during the warranty period are warranted only for the original warranty period. The contractor will take back replaced or defective material.`,
-
-    scopeOfWork: `Providing access/approach to rooftop.
-If any electrical modification is required from DISCOM (i.e. ELCB, changeover switch etc.) Customer shall provide necessary support.
-Provide necessary documents for project approvals from State/Central Government.
-Site clearance, ladders, water, and electricity supply for smooth installation and commissioning of the project.
-Customer shall provide Safe Place for Material unloading and storage during the work execution.
-Net meter / Smart meter charge in your scope.`
+    ...DEFAULT_TERMS_AND_CONDITIONS
   });
 
   const [testimonials, setTestimonials] = useState([
-    {
-      name: 'Rahulbhai Patel',
-      text: 'Extremely satisfied with our rooftop solar power plant and professional installation.',
-      rating: 5
-    },
-    {
-      name: 'Payalben Hirpara',
-      text: 'The product quality and complete experience were excellent.',
-      rating: 5
-    },
-    {
-      name: 'Happy Customer',
-      text: 'The team guided us at every step and made the process simple.',
-      rating: 5
-    }
+    { name: 'Rahulbhai Patel', text: 'Extremely satisfied with our rooftop solar power plant and professional installation.', rating: 5 },
+    { name: 'Payalben Hirpara', text: 'The product quality and complete experience were excellent.', rating: 5 },
+    { name: 'Happy Customer', text: 'The team guided us at every step and made the process simple.', rating: 5 }
   ]);
 
   const [summary, setSummary] = useState({
@@ -165,12 +162,13 @@ Net meter / Smart meter charge in your scope.`
     grandTotal: 0
   });
 
+  // FETCH CUSTOMERS
   const fetchCustomers = async () => {
     try {
       const data = await customerService.getAll();
       setCustomers(data);
     } catch (err) {
-      console.error('Fetch customers error:', err);
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
@@ -180,7 +178,7 @@ Net meter / Smart meter charge in your scope.`
     fetchCustomers();
   }, []);
 
-  // GST calculation
+  // GST CALCULATION
   useEffect(() => {
     const enteredAmount = Number(materialTotalAmount) || 0;
     const rate = Math.max(0, Number(materialGstRate) || 0);
@@ -208,16 +206,27 @@ Net meter / Smart meter charge in your scope.`
       sgstAmount: sgstAmount.toFixed(2),
       igstAmount: igstAmount.toFixed(2),
       grandTotal: (
-        gstMode === 'INCLUDED'
-          ? enteredAmount
-          : enteredAmount + totalGst
+        gstMode === 'INCLUDED' ? enteredAmount : enteredAmount + totalGst
       ).toFixed(2)
     });
   }, [materialTotalAmount, materialGstRate, gstType, gstMode]);
 
+  // INPUT HANDLERS
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleMainItemChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData(prev => ({
+      ...prev,
+      mainItem: {
+        ...prev.mainItem,
+        [name]: value
+      }
+    }));
   };
 
   const handleBomChange = (index, field, value) => {
@@ -236,11 +245,7 @@ Net meter / Smart meter charge in your scope.`
         itemDescription: '',
         qty: 1,
         unit: 'Nos',
-        brand: '',
-        rate: 0,
-        gstRate: 0,
-        gstAmount: 0,
-        total: 0
+        brand: ''
       }
     ]);
   };
@@ -251,12 +256,10 @@ Net meter / Smart meter charge in your scope.`
 
   const handleCustomerCreated = (newCustomer) => {
     setCustomers(prev => [newCustomer, ...prev]);
-    setFormData(prev => ({
-      ...prev,
-      customerId: newCustomer._id
-    }));
+    setFormData(prev => ({ ...prev, customerId: newCustomer._id }));
   };
 
+  // SAVE QUOTATION
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -303,7 +306,6 @@ Net meter / Smart meter charge in your scope.`
         cgstAmount: Number(summary.cgstAmount),
         sgstAmount: Number(summary.sgstAmount),
         igstAmount: Number(summary.igstAmount),
-
         bom: bomItems.map(({ srNo, itemDescription, qty, unit, brand }) => ({
           srNo,
           itemDescription,
@@ -311,11 +313,9 @@ Net meter / Smart meter charge in your scope.`
           unit,
           brand
         })),
-
         subTotal: parseFloat(summary.subTotal),
         gstAmount: parseFloat(summary.totalGst),
         grandTotal: parseFloat(summary.grandTotal),
-
         mainItem: {
           description: formData.mainItem.description,
           panelDetails: formData.mainItem.panelDetails,
@@ -325,7 +325,6 @@ Net meter / Smart meter charge in your scope.`
           discount: Number(formData.mainItem.discount) || 0,
           totalAmountWithTax: parseFloat(summary.grandTotal)
         },
-
         date: new Date(),
         expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
       };
@@ -335,11 +334,7 @@ Net meter / Smart meter charge in your scope.`
       alert('Quotation created successfully!');
       navigate('/employee/quotations');
     } catch (err) {
-      console.error('Create quotation error:', err);
-      alert(
-        err.response?.data?.message ||
-        'Failed to create quotation'
-      );
+      alert(err.response?.data?.message || 'Failed to create quotation');
     } finally {
       setIsSaving(false);
     }
@@ -378,9 +373,7 @@ Net meter / Smart meter charge in your scope.`
         >
           {/* CUSTOMER AND SYSTEM DETAILS */}
           <div className="form-card">
-            <h3 className="section-title">
-              1. Customer & System Details
-            </h3>
+            <h3 className="section-title">1. Customer & System Details</h3>
 
             <div className="form-grid">
               <div className="customer-select-wrapper">
@@ -468,7 +461,7 @@ Net meter / Smart meter charge in your scope.`
               />
             </div>
 
-            <div className="form-grid" style={{ marginTop: 15 }}>
+            <div className="form-grid" style={{ marginTop: '15px' }}>
               <Input
                 label="Subsidy Note"
                 name="subsidyAmount"
@@ -486,9 +479,7 @@ Net meter / Smart meter charge in your scope.`
           {/* BILL OF MATERIAL */}
           <div className="form-card">
             <div className="section-header-row">
-              <h3 className="section-title">
-                2. Bill of Material (BOM)
-              </h3>
+              <h3 className="section-title">2. Bill of Material (BOM)</h3>
 
               <Button
                 type="button"
@@ -520,18 +511,14 @@ Net meter / Smart meter charge in your scope.`
                       <td>
                         <input
                           value={item.srNo}
-                          onChange={e =>
-                            handleBomChange(index, 'srNo', e.target.value)
-                          }
+                          onChange={e => handleBomChange(index, 'srNo', e.target.value)}
                         />
                       </td>
 
                       <td>
                         <input
                           value={item.itemDescription}
-                          onChange={e =>
-                            handleBomChange(index, 'itemDescription', e.target.value)
-                          }
+                          onChange={e => handleBomChange(index, 'itemDescription', e.target.value)}
                           placeholder="Item name"
                         />
                       </td>
@@ -542,18 +529,14 @@ Net meter / Smart meter charge in your scope.`
                           min="0"
                           step="any"
                           value={item.qty}
-                          onChange={e =>
-                            handleBomChange(index, 'qty', e.target.value)
-                          }
+                          onChange={e => handleBomChange(index, 'qty', e.target.value)}
                         />
                       </td>
 
                       <td>
                         <select
                           value={item.unit}
-                          onChange={e =>
-                            handleBomChange(index, 'unit', e.target.value)
-                          }
+                          onChange={e => handleBomChange(index, 'unit', e.target.value)}
                         >
                           {UNIT_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>
@@ -568,9 +551,7 @@ Net meter / Smart meter charge in your scope.`
                           type="text"
                           list="brand-list"
                           value={item.brand}
-                          onChange={e =>
-                            handleBomChange(index, 'brand', e.target.value)
-                          }
+                          onChange={e => handleBomChange(index, 'brand', e.target.value)}
                           placeholder="Brand"
                         />
                       </td>
@@ -646,9 +627,7 @@ Net meter / Smart meter charge in your scope.`
             <div className="summary-wrapper">
               <div className="summary-box">
                 <div className="summary-row">
-                  <span>
-                    {gstMode === 'INCLUDED' ? 'Taxable Amount:' : 'Amount:'}
-                  </span>
+                  <span>{gstMode === 'INCLUDED' ? 'Taxable Amount:' : 'Amount:'}</span>
                   <span>₹ {summary.subTotal}</span>
                 </div>
 
@@ -672,7 +651,7 @@ Net meter / Smart meter charge in your scope.`
             {[
               'panelWarranty',
               'inverterWarranty',
-              ...(formData.systemType !== 'ON_GRID' ? ['batteryWarranty'] : []),
+              'batteryWarranty',
               'bosWarranty',
               'maintenanceWarranty',
               'warrantyNotes'
@@ -754,17 +733,15 @@ Net meter / Smart meter charge in your scope.`
                   />
                 </label>
 
-                <button
+                <Button
                   type="button"
-                  className="remove-btn"
+                  variant="secondary"
                   onClick={() =>
-                    setTestimonials(prev =>
-                      prev.filter((_, i) => i !== index)
-                    )
+                    setTestimonials(prev => prev.filter((_, i) => i !== index))
                   }
                 >
-                  <FiTrash2 />
-                </button>
+                  Remove
+                </Button>
               </div>
             ))}
 
@@ -828,7 +805,7 @@ Net meter / Smart meter charge in your scope.`
             {[
               'panelWarranty',
               'inverterWarranty',
-              ...(formData.systemType !== 'ON_GRID' ? ['batteryWarranty'] : []),
+              'batteryWarranty',
               'bosWarranty',
               'maintenanceWarranty',
               'warrantyNotes'
@@ -858,9 +835,9 @@ Net meter / Smart meter charge in your scope.`
             </p>
 
             <h4>Testimonials</h4>
-            {testimonials.map((item, index) => (
+            {testimonials.map((t, index) => (
               <p key={index}>
-                <strong>{item.name || 'Customer'}:</strong> {item.text}
+                <strong>{t.name || 'Customer'}:</strong> {t.text}
               </p>
             ))}
           </div>

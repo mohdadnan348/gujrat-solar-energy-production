@@ -106,10 +106,9 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     const companyMobile = settings.mobile || "";
     const companyEmail = settings.email || "";
     const gstin = settings.gstin || "";
-    // The quotation creator must be shown on both the cover page and quotation page.
-    // Keep the company owner as a fallback for older quotations without createdBy.
-    const createdByName = quotationData.createdBy?.name || settings.ownerName || "Siddiqui Wasim";
-    const ownerName = createdByName;
+    // Page 1 is the fixed company representative; page 4 identifies the actual creator.
+    const createdByName = quotationData.createdBy?.name || "Unknown Employee";
+    const ownerName = "Siddiqui Wasim";
     const bank = settings.bankDetails || {};
     // Client-approved Terms & Conditions copied from reference quotation EST-00215.
     // Keep this wording consistent across quotations unless Admin updates the approved terms.
@@ -865,7 +864,7 @@ const generateQuotationPDF = async (quotationData, customerData) => {
       <p><strong>Lead:</strong> ${escapeHtml(quotationData.leadName || "-")}</p>
       <p><strong>ID:</strong> ${escapeHtml(quotationData.estimateNo || "-")}</p>
       <p><strong>Date:</strong> ${formatDate(quotationData.date)}</p>
-      <p><strong>By :</strong> ${escapeHtml(ownerName)}</p>
+      <p><strong>By:</strong> ${escapeHtml(ownerName)}</p>
       <p><strong>Plant Capacity:</strong> ${escapeHtml(quotationData.plantCapacity || "-")}</p>
       <p><strong>Customer Category:</strong> ${escapeHtml(customerCategoryLabel)}</p>
       <p><strong>System Type:</strong> ${escapeHtml(systemTypeLabel)}</p>
@@ -1063,10 +1062,8 @@ const generateQuotationPDF = async (quotationData, customerData) => {
   <h3>2. Inverter Manufacturing Defect Warranty:</h3>
   <div class="term-points">${renderTermLines(terms.inverterWarranty)}</div>
 
-  ${quotationData.systemType === 'ON_GRID' ? '' : `
   <h3>3. Battery Manufacturing Defect Warranty for Hybrid &amp; Off Grid Plant:</h3>
   <div class="term-points">${renderTermLines(terms.batteryWarranty)}</div>
-  `}
 
   <h3>4. Balance of System (BOS):</h3>
   <div class="term-points">${renderTermLines(terms.bosWarranty)}</div>

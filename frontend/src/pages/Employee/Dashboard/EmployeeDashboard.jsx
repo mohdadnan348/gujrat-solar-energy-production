@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiCheckSquare, FiTarget, FiClock, FiDollarSign, FiArrowRight, FiCalendar, FiBell } from 'react-icons/fi';
+import { FiCheckSquare, FiTarget, FiClock, FiDollarSign, FiArrowRight, FiCalendar, FiBell, FiFileText } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import dashboardService from '../../../services/dashboardService';
@@ -63,6 +63,14 @@ const EmployeeDashboard = () => {
       icon: <FiDollarSign />, 
       color: 'orange', 
       link: '/employee/salary' 
+    },
+    {
+      title: 'My Quotations',
+      value: 'Open',
+      subtitle: 'Create and manage quotations',
+      icon: <FiFileText />,
+      color: 'green',
+      link: '/employee/quotations'
     },
   ];
 
