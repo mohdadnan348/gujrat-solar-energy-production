@@ -106,8 +106,10 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     const companyMobile = settings.mobile || "";
     const companyEmail = settings.email || "";
     const gstin = settings.gstin || "";
-    const ownerName = settings.ownerName || "Siddiqui Wasim";
-    const createdByName = quotationData.createdBy?.name || "-";
+    // The quotation creator must be shown on both the cover page and quotation page.
+    // Keep the company owner as a fallback for older quotations without createdBy.
+    const createdByName = quotationData.createdBy?.name || settings.ownerName || "Siddiqui Wasim";
+    const ownerName = createdByName;
     const bank = settings.bankDetails || {};
     // Client-approved Terms & Conditions copied from reference quotation EST-00215.
     // Keep this wording consistent across quotations unless Admin updates the approved terms.
@@ -774,6 +776,34 @@ const generateQuotationPDF = async (quotationData, customerData) => {
   .page .cover-company { font-size: 14px; }
   .page .cover-customer p { font-size: 14px; }
   .page .quote-top, .page .quote-summary, .page .quote-bottom { font-size: 14px; }
+  /* Keep quotation page content above its fixed-position footer. */
+  .quotation-page .quote-top {
+    font-size: 11px;
+    line-height: 1.3;
+    gap: 6px;
+    margin-bottom: 9px;
+  }
+  .quotation-page .quote-top > div { padding-left: 6px; padding-right: 6px; }
+  .quotation-page .page-title { margin: 5px 0 12px; font-size: 22px; }
+  .quotation-page .main-quotation-table,
+  .quotation-page .main-quotation-table th,
+  .quotation-page .main-quotation-table td { font-size: 11px; }
+  .quotation-page .main-quotation-table th { padding: 6px 4px; }
+  .quotation-page .main-quotation-table td { padding: 5px 4px; }
+  .quotation-page .main-quotation-row { min-height: 0; }
+  .quotation-page .main-quotation-description { line-height: 1.28; }
+  .quotation-page .quote-summary { font-size: 11px; }
+  .quotation-page .amount-words { padding: 8px 7px; }
+  .quotation-page .totals td { padding: 4px; }
+  .quotation-page .quote-bottom {
+    font-size: 10.5px;
+    line-height: 1.3;
+    margin-top: 10px;
+  }
+  .quotation-page .quote-bottom > div { padding-left: 6px; padding-right: 6px; }
+  .quotation-page .quote-bottom h3 { font-size: 12px; margin-bottom: 5px; }
+  .quotation-page .signature { padding-top: 12px; }
+  .quotation-page .signature-line { margin-top: 18px; }
   .page table, .page th, .page td { font-size: 14px; }
   .page .bom-table, .page .bom-table th, .page .bom-table td { font-size: 14px; }
   .page .testimonial .review { font-size: 14px; }
