@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 import { FiSave, FiArrowLeft, FiPlus, FiTrash2 } from 'react-icons/fi';
 
 import Input from '../../../components/Common/Input';
@@ -92,6 +93,7 @@ const TERM_FIELDS = [
 const EditQuotation = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -109,6 +111,11 @@ const EditQuotation = () => {
     systemType: 'ON_GRID',
     batteryIncluded: false,
     panelCount: 0,
+    createdByName: '',
+    panelBrand: '',
+    panelWattage: 0,
+    panelTechnology: '',
+    subsidyDescription: 'Subsidy will be credited to your bank account directly.',
     expiryDate: '',
     mainItem: { ...initialMainItem },
     materialTotalAmount: 0,
@@ -127,6 +134,9 @@ const EditQuotation = () => {
   });
 
   const [bomItems, setBomItems] = useState([]);
+  const [bomOptions, setBomOptions] = useState([]);
+  const [selectedBomOption, setSelectedBomOption] = useState('');
+  const [bomOptionName, setBomOptionName] = useState('');
   const [testimonials, setTestimonials] = useState([]);
 
   // FETCH QUOTATION
@@ -161,6 +171,11 @@ const EditQuotation = () => {
           systemType: data.systemType || 'ON_GRID',
           batteryIncluded: Boolean(data.batteryIncluded),
           panelCount: data.panelCount || 0,
+          createdByName: data.createdByName || data.createdBy?.name || user?.name || '',
+          panelBrand: data.panelBrand || data.mainItem?.panelDetails || '',
+          panelWattage: Number(data.panelWattage || 0),
+          panelTechnology: data.panelTechnology || '',
+          subsidyDescription: data.subsidyDescription || 'Subsidy will be credited to your bank account directly.',
 
           expiryDate: data.expiryDate
             ? new Date(data.expiryDate).toISOString().slice(0, 10)
@@ -192,7 +207,7 @@ const EditQuotation = () => {
         });
 
         setBomItems(
-          (data.bom || []).map((item, index) => ({
+          ((data.bomOptions || []).find(option => option.optionId === data.selectedBomOption)?.items || data.bom || []).map((item, index) => ({
             srNo: item.srNo || String(index + 1),
             itemDescription: item.itemDescription || '',
             qty: Number(item.qty) || 0,
@@ -216,6 +231,9 @@ const EditQuotation = () => {
             )
           }))
         );
+        setBomOptions(Array.isArray(data.bomOptions) ? data.bomOptions : []);
+        setSelectedBomOption(data.selectedBomOption || '');
+        setBomOptionName((data.bomOptions || []).find(option => option.optionId === data.selectedBomOption)?.name || '');
       } catch (err) {
         if (isMounted) {
           setError(
@@ -280,6 +298,21 @@ const EditQuotation = () => {
   };
 
   // BOM HANDLERS
+  const saveCurrentBomOption = () => {
+    const name = (bomOptionName || '').trim();
+    if (!name) { setError('Please enter a BOM option name.'); return; }
+    const optionId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    setBomOptions(prev => [...prev.filter(option => option.optionId !== optionId), { optionId, name, items: bomItems.map(item => ({ ...item })) }]);
+    setSelectedBomOption(optionId);
+    setSuccess(`Saved ${name}`);
+  };
+  const loadBomOption = (optionId) => {
+    const option = bomOptions.find(item => item.optionId === optionId);
+    if (option) setBomItems(option.items.map(item => ({ ...item })));
+    setSelectedBomOption(optionId);
+    setBomOptionName(option?.name || '');
+  };
+
   const handleBomChange = (index, field, value) => {
     setBomItems(prev =>
       prev.map((item, i) => {
@@ -463,6 +496,8 @@ const EditQuotation = () => {
 
         termsAndConditions: formData.termsAndConditions,
 
+        selectedBomOption,
+        bomOptions: [...bomOptions.filter(option => option.optionId !== selectedBomOption), { optionId: selectedBomOption || 'standard-bom', name: bomOptionName || 'Standard BOM', items: bomItems.map(item => ({ ...item })) }],
         bom: bomItems.map((item, index) => ({
           srNo: item.srNo || String(index + 1),
           itemDescription: item.itemDescription,
@@ -686,6 +721,27 @@ const EditQuotation = () => {
             </div>
 
             <div>
+              <label>Quotation Heading / Item Description</label>
+              <Input value={formData.mainItem.description || ''} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, mainItem: { ...prev.mainItem, description: e.target.value } }))} placeholder="Residential Solar Rooftop On-Grid Plant" />
+            </div>
+            <div>
+              <label>Panel Brand</label>
+              <textarea rows={2} name="panelBrand" value={formData.panelBrand} disabled={!isEditable} onChange={handleInputChange} placeholder="Waaree / Premier / Adani" style={{ minHeight: 64, width: '100%', border: '1px solid #ddd', borderRadius: 8, padding: 10, resize: 'vertical' }} />
+            </div>
+            <div>
+              <label>Panel Wattage (W)</label>
+              <Input name="panelWattage" type="number" min="1" value={formData.panelWattage} disabled={!isEditable} onChange={e => { const watts = Number(e.target.value); setFormData(prev => ({ ...prev, panelWattage: e.target.value, panelTechnology: watts > 600 ? 'Bifacial + TOPCon' : watts > 0 && watts < 600 ? 'Bifacial' : '' })); }} />
+            </div>
+            <div>
+              <label>Panel Technology (Auto)</label>
+              <Input name="panelTechnology" value={formData.panelTechnology} disabled={!isEditable} onChange={handleInputChange} />
+            <div><label>Solar Inverter Brand</label><Input name="mainItem.inverterDetails" value={formData.mainItem.inverterDetails || ''} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, mainItem: { ...prev.mainItem, inverterDetails: e.target.value } }))} placeholder="Enter inverter brand / model" /></div>
+            </div>
+            <div>
+              <label>Created By (Editable)</label>
+              <Input name="createdByName" value={formData.createdByName} disabled={!isEditable} onChange={handleInputChange} placeholder={user?.name || 'Creator name'} />
+            </div>
+            <div>
               <label>Expiry Date</label>
               <Input
                 name="expiryDate"
@@ -861,8 +917,9 @@ const EditQuotation = () => {
                 formData.customerCategory !== 'RESIDENTIAL' ||
                 formData.systemType === 'OFF_GRID'
               }
-              placeholder="Enter eligible subsidy details"
+              placeholder="Enter subsidy amount"
             />
+            <Input label="Subsidy Description" name="subsidyDescription" value={formData.subsidyDescription} disabled={!isEditable} onChange={handleInputChange} placeholder="Subsidy will be credited to your bank account directly." />
           </div>
         </div>
 
@@ -957,6 +1014,17 @@ const EditQuotation = () => {
             )}
           </div>
 
+          <div className="form-grid" style={{ marginBottom: 14 }}>
+            <Input label="BOM Option Name" value={bomOptionName} disabled={!isEditable} onChange={e => setBomOptionName(e.target.value)} placeholder="e.g. Waaree 620W BOM" />
+            <Button type="button" variant="secondary" disabled={!isEditable} onClick={saveCurrentBomOption}>Save as BOM Option</Button>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              Load Saved BOM Option
+              <select value={selectedBomOption} disabled={!isEditable} onChange={e => loadBomOption(e.target.value)} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}>
+                <option value="">Current BOM</option>
+                {bomOptions.map(option => <option key={option.optionId} value={option.optionId}>{option.name}</option>)}
+              </select>
+            </label>
+          </div>
           <div className="bom-table-container">
             <table className="bom-table">
               <thead>

@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 import { FiSave, FiArrowLeft, FiPlus, FiTrash2 } from 'react-icons/fi';
 import Input from '../../../components/Common/Input';
 import Select from '../../../components/Common/Select';
@@ -35,6 +36,7 @@ const BRAND_OPTIONS = [
 
 const CreateQuotation = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [customers, setCustomers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,8 +52,13 @@ const CreateQuotation = () => {
     plantCapacity: '',
     panelCount: 5,
     subsidyAmount: '',
+    createdByName: user?.name || '',
+    panelBrand: '',
+    panelWattage: '',
+    panelTechnology: '',
+    subsidyDescription: 'Subsidy will be credited to your bank account directly.',
     mainItem: {
-      description: 'Custom BOM Based Quotation',
+      description: 'Residential Solar Rooftop On-Grid Plant',
       panelDetails: '',
       inverterDetails: '',
       qty: 'Custom',
@@ -77,6 +84,10 @@ const CreateQuotation = () => {
     { srNo: '8.2', itemDescription: 'Ferules & Cable Tags', qty: 1, unit: 'Set', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Standard' },
     { srNo: '8.3', itemDescription: 'Lugs Ring Type As per wiring requirements', qty: 1, unit: 'Set', rate: 0, gstRate: 18, gstAmount: 0, total: 0, brand: 'Copper/Aluminium' }
   ]);
+
+  const [bomOptions, setBomOptions] = useState([]);
+  const [selectedBomOption, setSelectedBomOption] = useState('standard-bom');
+  const [bomOptionName, setBomOptionName] = useState('Standard BOM');
 
   const [materialTotalAmount, setMaterialTotalAmount] = useState('');
   const [materialGstRate, setMaterialGstRate] = useState('');
@@ -215,6 +226,8 @@ Net meter / Smart meter charge in your scope.`
     });
   }, [materialTotalAmount, materialGstRate, gstType, gstMode]);
 
+  useEffect(() => { if (!formData.createdByName && user?.name) setFormData(prev => ({ ...prev, createdByName: user.name })); }, [user?.name]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -247,6 +260,21 @@ Net meter / Smart meter charge in your scope.`
 
   const removeBomItem = (index) => {
     setBomItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const saveCurrentBomOption = () => {
+    const name = (bomOptionName || '').trim();
+    if (!name) { alert('Please enter a BOM option name.'); return; }
+    const optionId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    setBomOptions(prev => [...prev.filter(option => option.optionId !== optionId), { optionId, name, items: bomItems.map(item => ({ ...item })) }]);
+    setSelectedBomOption(optionId);
+  };
+
+  const loadBomOption = (optionId) => {
+    const option = bomOptions.find(item => item.optionId === optionId);
+    if (option) setBomItems(option.items.map(item => ({ ...item })));
+    setSelectedBomOption(optionId);
+    setBomOptionName(option?.name || '');
   };
 
   const handleCustomerCreated = (newCustomer) => {
@@ -284,6 +312,11 @@ Net meter / Smart meter charge in your scope.`
       const payload = {
         customerId: formData.customerId,
         leadName: formData.leadName,
+        createdByName: formData.createdByName || user?.name || '',
+        panelBrand: formData.panelBrand,
+        panelWattage: Number(formData.panelWattage) || 0,
+        panelTechnology: formData.panelTechnology || (Number(formData.panelWattage) > 600 ? 'Bifacial + TOPCon' : Number(formData.panelWattage) > 0 && Number(formData.panelWattage) < 600 ? 'Bifacial' : ''),
+        subsidyDescription: formData.subsidyDescription,
         plantCapacity: `${formData.plantCapacity} KW`,
         customerCategory: formData.customerCategory,
         systemType: formData.systemType,
@@ -304,6 +337,8 @@ Net meter / Smart meter charge in your scope.`
         sgstAmount: Number(summary.sgstAmount),
         igstAmount: Number(summary.igstAmount),
 
+        selectedBomOption,
+        bomOptions: [...bomOptions.filter(option => option.optionId !== selectedBomOption), { optionId: selectedBomOption || 'standard-bom', name: bomOptionName || 'Standard BOM', items: bomItems.map(item => ({ ...item })) }],
         bom: bomItems.map(({ srNo, itemDescription, qty, unit, brand }) => ({
           srNo,
           itemDescription,
@@ -466,11 +501,17 @@ Net meter / Smart meter charge in your scope.`
                 placeholder="e.g. 5"
                 required
               />
+              <Input label="Quotation Heading / Item Description" value={formData.mainItem.description} onChange={e => setFormData(prev => ({ ...prev, mainItem: { ...prev.mainItem, description: e.target.value } }))} placeholder="Residential Solar Rooftop On-Grid Plant" />
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14, color: '#2d3748' }}>Solar Panel Brand<textarea rows={2} name="panelBrand" value={formData.panelBrand} onChange={handleInputChange} placeholder="Waaree / Premier / Adani" style={{ minHeight: 64, border: '1px solid #ddd', borderRadius: 8, padding: 10, font: 'inherit', resize: 'vertical' }} /></label>
+              <Input label="Panel Wattage (W)" name="panelWattage" type="number" min="1" value={formData.panelWattage} onChange={(e) => { const watts = Number(e.target.value); setFormData(prev => ({ ...prev, panelWattage: e.target.value, panelTechnology: watts > 600 ? 'Bifacial + TOPCon' : watts > 0 && watts < 600 ? 'Bifacial' : '' })); }} placeholder="e.g. 620" />
+              <Input label="Panel Technology (Auto)" name="panelTechnology" value={formData.panelTechnology} onChange={handleInputChange} placeholder="Auto based on wattage" />
+              <Input label="Solar Inverter Brand" value={formData.mainItem.inverterDetails} onChange={e => setFormData(prev => ({ ...prev, mainItem: { ...prev.mainItem, inverterDetails: e.target.value } }))} placeholder="Enter inverter brand / model" />
             </div>
 
             <div className="form-grid" style={{ marginTop: 15 }}>
+              <Input label="Created By (Editable)" name="createdByName" value={formData.createdByName} onChange={handleInputChange} placeholder={user?.name || 'Enter creator name'} />
               <Input
-                label="Subsidy Note"
+                label="Subsidy Amount"
                 name="subsidyAmount"
                 value={formData.subsidyAmount}
                 onChange={handleInputChange}
@@ -478,8 +519,9 @@ Net meter / Smart meter charge in your scope.`
                   formData.customerCategory !== 'RESIDENTIAL' ||
                   formData.systemType === 'OFF_GRID'
                 }
-                placeholder="Enter eligible subsidy details"
+                placeholder="Enter subsidy amount (e.g. ₹1,08,000)"
               />
+              <Input label="Subsidy Description" name="subsidyDescription" value={formData.subsidyDescription} onChange={handleInputChange} placeholder="Subsidy will be credited to your bank account directly." />
             </div>
           </div>
 
@@ -501,6 +543,17 @@ Net meter / Smart meter charge in your scope.`
               </Button>
             </div>
 
+            <div className="form-grid" style={{ marginBottom: 14 }}>
+              <Input label="BOM Option Name" value={bomOptionName} onChange={e => setBomOptionName(e.target.value)} placeholder="e.g. Waaree 620W BOM" />
+              <Button type="button" variant="secondary" size="sm" onClick={saveCurrentBomOption}>Save as BOM Option</Button>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14 }}>
+                Load Saved BOM Option
+                <select value={selectedBomOption} onChange={e => loadBomOption(e.target.value)} style={{ minHeight: 44, border: '1px solid #ddd', borderRadius: 8, padding: '0 12px' }}>
+                  <option value="standard-bom">Current BOM</option>
+                  {bomOptions.map(option => <option key={option.optionId} value={option.optionId}>{option.name}</option>)}
+                </select>
+              </label>
+            </div>
             <div className="bom-table-container">
               <table className="bom-table">
                 <thead>
@@ -527,12 +580,11 @@ Net meter / Smart meter charge in your scope.`
                       </td>
 
                       <td>
-                        <input
+                        <textarea rows={2}
                           value={item.itemDescription}
-                          onChange={e =>
-                            handleBomChange(index, 'itemDescription', e.target.value)
-                          }
+                          onChange={e => handleBomChange(index, 'itemDescription', e.target.value)}
                           placeholder="Item name"
+                          style={{ minWidth: 180, width: '100%', resize: 'vertical' }}
                         />
                       </td>
 
@@ -564,14 +616,11 @@ Net meter / Smart meter charge in your scope.`
                       </td>
 
                       <td>
-                        <input
-                          type="text"
-                          list="brand-list"
+                        <textarea rows={2}
                           value={item.brand}
-                          onChange={e =>
-                            handleBomChange(index, 'brand', e.target.value)
-                          }
-                          placeholder="Brand"
+                          onChange={e => handleBomChange(index, 'brand', e.target.value)}
+                          placeholder="Brand (use Enter for next line)"
+                          style={{ minWidth: 160, width: '100%', resize: 'vertical' }}
                         />
                       </td>
 
