@@ -107,8 +107,8 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     const companyEmail = settings.email || "";
     const gstin = settings.gstin || "";
     // Page 1 is the fixed company representative; page 4 identifies the actual creator.
-    const createdByName = quotationData.createdBy?.name || "Unknown Employee";
-    const ownerName = "Siddiqui Wasim";
+    const createdByName = String(quotationData.createdByName || quotationData.createdBy?.name || 'Unknown Employee').trim();
+    const ownerName = createdByName;
     const bank = settings.bankDetails || {};
     // Client-approved Terms & Conditions copied from reference quotation EST-00215.
     // Keep this wording consistent across quotations unless Admin updates the approved terms.
@@ -211,7 +211,8 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     const igstAmount = Number(quotationData.igstAmount ?? (gstType === 'IGST' ? gstAmount : 0));
     const gstRate = Number(quotationData.materialGstRate || 0);
     const grandTotal = Number(quotationData.grandTotal || 0);
-    const bom = Array.isArray(quotationData.bom) ? quotationData.bom : [];
+    const selectedBom = Array.isArray(quotationData.bomOptions) && quotationData.selectedBomOption ? quotationData.bomOptions.find(option => String(option.optionId || option.name) === String(quotationData.selectedBomOption)) : null;
+    const bom = Array.isArray(selectedBom?.items) ? selectedBom.items : (Array.isArray(quotationData.bom) ? quotationData.bom : []);
 
     // Consolidated quotation line on Page 4.
     const mainItem = quotationData.mainItem || {};
@@ -230,7 +231,9 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     const systemTypeLabel =
       systemLabels[quotationData.systemType] || "On-Grid";
     const mainItemDescription =
-      mainItem.description || `${customerCategoryLabel} Solar Rooftop ${systemTypeLabel} Plant`;
+      (!mainItem.description || /custom bom based quotation/i.test(mainItem.description))
+        ? `${customerCategoryLabel} Solar Rooftop ${systemTypeLabel} Plant`
+        : mainItem.description;
 
     // If the Pricing Details brand fields are blank, use the matching BOM brand.
     const panelBomItem = bom.find((item) =>
@@ -241,10 +244,11 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     const inverterBomItem = bom.find((item) =>
       /inverter/i.test(String(item.itemDescription || "")),
     );
-    const mainItemPanelDetails =
-      mainItem.panelDetails || panelBomItem?.brand || "";
-    const mainItemInverterDetails =
-      mainItem.inverterDetails || inverterBomItem?.brand || "";
+    const panelWattage = Number(quotationData.panelWattage || 0);
+    const panelTechnology = quotationData.panelTechnology || (panelWattage > 600 ? 'Bifacial + TOPCon' : panelWattage > 0 && panelWattage < 600 ? 'Bifacial' : '');
+    const panelBrand = quotationData.panelBrand || mainItem.panelDetails || '';
+    const mainItemPanelDetails = [panelBrand, panelTechnology, panelWattage ? `${panelWattage}W` : ''].filter(Boolean).join(' ');
+    const mainItemInverterDetails = mainItem.inverterDetails || "";
 
     const enteredQty = String(mainItem.qty || "").trim();
     const mainItemQty =
@@ -272,8 +276,11 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     const mainItemTotal = subTotal;
     const mainItemAmountWithTax = grandTotal;
 
-    const panelQty = Number(quotationData.panelCount || panelBomItem?.qty || 0);
-    const subsidyText = quotationData.subsidyAmount || "";
+    const panelQty = Number(quotationData.panelCount || 0);
+    const subsidyAmountText = String(quotationData.subsidyAmount || '').trim();
+    const subsidySentence = String(quotationData.subsidyDescription || 'Subsidy will be credited to your bank account directly.').trim();
+    const normalizedSubsidyAmount = /^\d+(?:\.\d+)?$/.test(subsidyAmountText) ? `₹${Number(subsidyAmountText).toLocaleString('en-IN')}` : subsidyAmountText;
+    const subsidyText = normalizedSubsidyAmount ? `${normalizedSubsidyAmount} ${subsidySentence}` : '';
     const mainItemDescriptionHtml = [
       `<strong>${escapeHtml(mainItemDescription)}</strong>`,
       `<div class="main-item-detail"><strong>Customer Category:</strong> ${escapeHtml(customerCategoryLabel)} &nbsp; | &nbsp; <strong>System Type:</strong> ${escapeHtml(systemTypeLabel)}</div>`,
@@ -668,7 +675,8 @@ const generateQuotationPDF = async (quotationData, customerData) => {
   .main-quotation-table th { padding: 8px 5px; }
   .main-quotation-table td { padding: 7px 5px; vertical-align: top; }
   .main-quotation-row { min-height: 42mm; }
-  .main-quotation-description { line-height: 1.45; overflow-wrap: anywhere; }
+  .main-quotation-description { line-height: 1.45; overflow-wrap: anywhere; word-break: normal; white-space: normal; }
+  .main-item-detail, .main-item-subsidy, .bom-table td { overflow-wrap: anywhere; white-space: pre-wrap; }
   .main-item-detail { margin-top: 2px; }
   .main-item-next-page { margin-top: 18px; }
   .main-item-subsidy { margin-top: 3px; }

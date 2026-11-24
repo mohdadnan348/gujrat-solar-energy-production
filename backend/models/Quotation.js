@@ -25,6 +25,12 @@ const quotationSchema = new mongoose.Schema({
   },
   
   leadName: { type: String },
+  createdByName: { type: String, trim: true },
+  panelBrand: { type: String, trim: true, default: '' },
+  panelWattage: { type: Number, min: 0, default: 0 },
+  panelTechnology: { type: String, trim: true, default: '' },
+  subsidyDescription: { type: String, trim: true, default: 'Subsidy will be credited to your bank account directly.' },
+  notes: { type: String, default: '' },
   branch: { type: String, enum: ['HEAD_OFFICE', 'MAIN_BRANCH', 'AZAMGAGH_BRANCH', 'FATEHPUR_BRANCH'], default: 'HEAD_OFFICE' },
   plantCapacity: { type: String },
   customerCategory: { type: String, enum: ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL'], default: 'RESIDENTIAL' },
@@ -64,6 +70,8 @@ const quotationSchema = new mongoose.Schema({
   roofImageUrl: { type: String },
   
   bom: [bomItemSchema],
+  bomOptions: [{ optionId: String, name: String, items: [bomItemSchema] }],
+  selectedBomOption: { type: String, default: '' },
   
   termsAndConditions: {
     generalTerms: { type: String },

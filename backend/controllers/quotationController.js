@@ -40,7 +40,7 @@ const createQuotation = catchAsync(async (req, res) => {
   const { 
     customerId, leadName, plantCapacity, customerCategory, systemType, batteryIncluded, branch, date, expiryDate, 
     mainItem, materialTotalAmount, materialGstRate, gstType, gstMode, perKwAmount, testimonials, subTotal, gstAmount, grandTotal, subsidyAmount, 
-    bom, termsAndConditions, panelCount 
+    bom, bomOptions, selectedBomOption, termsAndConditions, panelCount, createdByName, panelBrand, panelWattage, panelTechnology, subsidyDescription, notes
   } = req.body;
 
   const customer = await Customer.findById(customerId);
@@ -96,6 +96,12 @@ const createQuotation = catchAsync(async (req, res) => {
     date: date || Date.now(),
     expiryDate,
     createdBy: req.user._id,
+    createdByName: String(createdByName || req.user.name || '').trim(),
+    panelBrand: panelBrand || mainItem?.panelDetails || '',
+    panelWattage: Number(panelWattage) || 0,
+    panelTechnology: panelTechnology || (Number(panelWattage) > 600 ? 'Bifacial + TOPCon' : Number(panelWattage) > 0 && Number(panelWattage) < 600 ? 'Bifacial' : ''),
+    subsidyDescription: subsidyDescription || 'Subsidy will be credited to your bank account directly.',
+    notes: notes || '',
     ownerHR: req.user.role === 'HR' ? req.user._id : null,
     mainItem,
     materialTotalAmount: enteredAmount,
@@ -115,6 +121,8 @@ const createQuotation = catchAsync(async (req, res) => {
     panelCount,
     roofImageUrl,
     bom: formattedBom,
+    bomOptions: Array.isArray(bomOptions) ? bomOptions : [],
+    selectedBomOption: selectedBomOption || '',
     termsAndConditions,
     status: 'Draft'
   });
@@ -211,6 +219,11 @@ const updateQuotation = catchAsync(async (req, res) => {
     req.body.grandTotal = Number((gstMode === 'INCLUDED' ? amount : amount + gst).toFixed(2));
   }
 
+  if (req.body.panelWattage !== undefined && req.body.panelTechnology === undefined) {
+    const watts = Number(req.body.panelWattage) || 0;
+    req.body.panelTechnology = watts > 600 ? 'Bifacial + TOPCon' : watts > 0 && watts < 600 ? 'Bifacial' : '';
+  }
+
   if (req.body.panelCount !== undefined) {
     // Refresh the selected static artwork when the panel count changes.
     req.body.roofImageUrl = getPanelImagePath(req.body.panelCount);
@@ -223,8 +236,7 @@ const updateQuotation = catchAsync(async (req, res) => {
     req.body.amountInWords = amountInWords(req.body.grandTotal);
   }
 
-  if (req.body.bom) {
-    req.body.bom = req.body.bom.map(item => ({
+  const normalizeBom = items => (Array.isArray(items) ? items : []).map(item => ({
       srNo: item.srNo,
       itemDescription: item.itemDescription,
       qty: Number(item.qty),
@@ -235,10 +247,11 @@ const updateQuotation = catchAsync(async (req, res) => {
       gstAmount: Number(item.gstAmount) || 0,
       total: Number(item.total) || 0,
     }));
-  }
+  if (req.body.bom) req.body.bom = normalizeBom(req.body.bom);
+  if (req.body.bomOptions) req.body.bomOptions = req.body.bomOptions.map(option => ({ optionId: option.optionId || option.name, name: option.name || 'BOM Option', items: normalizeBom(option.items) }));
 
   const allowedUpdates = [
-    'leadName', 'plantCapacity', 'customerCategory', 'systemType', 'batteryIncluded', 'branch', 'expiryDate', 'mainItem', 
+    'leadName', 'createdByName', 'panelBrand', 'panelWattage', 'panelTechnology', 'subsidyDescription', 'notes', 'bomOptions', 'selectedBomOption', 'plantCapacity', 'customerCategory', 'systemType', 'batteryIncluded', 'branch', 'expiryDate', 'mainItem', 
     'materialTotalAmount', 'perKwAmount', 'materialGstRate', 'gstType', 'gstMode', 'testimonials', 'cgstAmount', 'sgstAmount', 'igstAmount', 'subTotal', 'gstAmount', 'grandTotal', 'subsidyAmount', 
     'panelCount', 'roofImageUrl', 'bom', 'termsAndConditions', 'amountInWords'
   ];
