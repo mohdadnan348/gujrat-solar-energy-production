@@ -114,6 +114,8 @@ const CreateQuotation = () => {
     panelBrand: '',
     panelWattage: '',
     panelTechnology: '',
+    inverterBrand: '', inverterCapacity: '', inverterQuantity: 1,
+    batteryBrand: '', batteryType: '', batteryCapacity: '', batteryVoltage: '', batteryQuantity: 1,
     subsidyDescription: 'Subsidy will be credited to your bank account directly.',
     mainItem: {
       description: 'Residential Solar Rooftop On-Grid Plant',
@@ -319,6 +321,13 @@ const CreateQuotation = () => {
         panelBrand: formData.panelBrand,
         panelWattage: Number(formData.panelWattage) || 0,
         panelTechnology: formData.panelTechnology || (Number(formData.panelWattage) > 600 ? 'Bifacial + TOPCon' : Number(formData.panelWattage) > 0 && Number(formData.panelWattage) < 600 ? 'Bifacial' : ''),
+        inverterBrand: formData.inverterBrand || formData.mainItem.inverterDetails,
+        inverterCapacity: formData.inverterCapacity, inverterQuantity: Number(formData.inverterQuantity) || 0,
+        batteryBrand: formData.systemType === 'ON_GRID' ? '' : formData.batteryBrand,
+        batteryType: formData.systemType === 'ON_GRID' ? '' : formData.batteryType,
+        batteryCapacity: formData.systemType === 'ON_GRID' ? '' : formData.batteryCapacity,
+        batteryVoltage: formData.systemType === 'ON_GRID' ? '' : formData.batteryVoltage,
+        batteryQuantity: formData.systemType === 'ON_GRID' ? 0 : Number(formData.batteryQuantity) || 0,
         subsidyDescription: formData.subsidyDescription,
         plantCapacity: `${formData.plantCapacity} KW`,
         customerCategory: formData.customerCategory,
@@ -498,7 +507,17 @@ const CreateQuotation = () => {
               <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 14, color: '#2d3748' }}>Solar Panel Brand<textarea rows={2} name="panelBrand" value={formData.panelBrand} onChange={handleInputChange} placeholder="Waaree / Premier / Adani" style={{ minHeight: 64, border: '1px solid #ddd', borderRadius: 8, padding: 10, font: 'inherit', resize: 'vertical' }} /></label>
               <Input label="Panel Wattage (W)" name="panelWattage" type="number" min="1" value={formData.panelWattage} onChange={(e) => { const watts = Number(e.target.value); setFormData(prev => ({ ...prev, panelWattage: e.target.value, panelTechnology: watts > 600 ? 'Bifacial + TOPCon' : watts > 0 && watts < 600 ? 'Bifacial' : '' })); }} placeholder="e.g. 620" />
               <Input label="Panel Technology (Auto)" name="panelTechnology" value={formData.panelTechnology} onChange={handleInputChange} placeholder="Auto based on wattage" />
-              <Input label="Solar Inverter Brand" value={formData.mainItem.inverterDetails} onChange={e => setFormData(prev => ({ ...prev, mainItem: { ...prev.mainItem, inverterDetails: e.target.value } }))} placeholder="Enter inverter brand / model" />
+              <Input label="Solar Inverter Brand" value={formData.inverterBrand || formData.mainItem.inverterDetails} onChange={e => setFormData(prev => ({ ...prev, inverterBrand: e.target.value, mainItem: { ...prev.mainItem, inverterDetails: e.target.value } }))} placeholder="Enter inverter brand / model" />
+              <Input label="Inverter Capacity (kW)" value={formData.inverterCapacity} onChange={e => setFormData(prev => ({ ...prev, inverterCapacity: e.target.value }))} placeholder="e.g. 5 kW" />
+              <Input label="Inverter Quantity (Nos)" type="number" min="0" value={formData.inverterQuantity} onChange={e => setFormData(prev => ({ ...prev, inverterQuantity: e.target.value }))} />
+              {formData.systemType !== 'ON_GRID' && <>
+                <div style={{ gridColumn: '1 / -1', marginTop: 12, padding: '12px 14px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, fontWeight: 700, color: '#166534' }}>Battery Configuration</div>
+                <Input label="Battery Brand" value={formData.batteryBrand} onChange={e => setFormData(prev => ({ ...prev, batteryBrand: e.target.value }))} placeholder="e.g. Exide / Luminous" />
+                <Input label="Battery Type" value={formData.batteryType} onChange={e => setFormData(prev => ({ ...prev, batteryType: e.target.value }))} placeholder="Lithium / Tubular / Lead Acid" />
+                <Input label="Battery Capacity (Ah / kWh)" value={formData.batteryCapacity} onChange={e => setFormData(prev => ({ ...prev, batteryCapacity: e.target.value }))} placeholder="e.g. 150 Ah or 5 kWh" />
+                <Input label="Battery Voltage" value={formData.batteryVoltage} onChange={e => setFormData(prev => ({ ...prev, batteryVoltage: e.target.value }))} placeholder="e.g. 48V" />
+                <Input label="Battery Quantity (Nos)" type="number" min="0" value={formData.batteryQuantity} onChange={e => setFormData(prev => ({ ...prev, batteryQuantity: e.target.value }))} />
+              </>}
             </div>
 
             <div className="form-grid" style={{ marginTop: '15px' }}>

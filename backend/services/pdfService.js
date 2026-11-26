@@ -248,7 +248,16 @@ const generateQuotationPDF = async (quotationData, customerData) => {
     const panelTechnology = quotationData.panelTechnology || (panelWattage > 600 ? 'Bifacial + TOPCon' : panelWattage > 0 && panelWattage < 600 ? 'Bifacial' : '');
     const panelBrand = quotationData.panelBrand || mainItem.panelDetails || '';
     const mainItemPanelDetails = [panelBrand, panelTechnology, panelWattage ? `${panelWattage}W` : ''].filter(Boolean).join(' ');
-    const mainItemInverterDetails = mainItem.inverterDetails || "";
+    const mainItemInverterDetails = quotationData.inverterBrand || mainItem.inverterDetails || '';
+    const inverterCapacityText = String(quotationData.inverterCapacity || '').trim();
+    const inverterQuantity = Number(quotationData.inverterQuantity || 0);
+    const batteryDetails = quotationData.systemType !== 'ON_GRID' ? [
+      quotationData.batteryBrand,
+      quotationData.batteryType,
+      quotationData.batteryCapacity,
+      quotationData.batteryVoltage
+    ].filter(Boolean).join(' | ') : '';
+    const batteryQuantity = Number(quotationData.batteryQuantity || 0);
 
     const enteredQty = String(mainItem.qty || "").trim();
     const mainItemQty =
@@ -287,9 +296,12 @@ const generateQuotationPDF = async (quotationData, customerData) => {
       mainItemPanelDetails
         ? `<div class="main-item-detail">1. Solar Panels Brand: ${escapeHtml(mainItemPanelDetails)}${panelQty > 0 ? ` (${panelQty} Qty)` : ""}</div>`
         : "",
-      mainItemInverterDetails
-        ? `<div class="main-item-detail">2. Solar Inverter Brand: ${escapeHtml(mainItemInverterDetails)}</div>`
-        : "",
+      mainItemInverterDetails || inverterCapacityText
+        ? `<div class="main-item-detail">2. Solar Inverter: ${escapeHtml(mainItemInverterDetails || '—')}${inverterCapacityText ? ` | Capacity: ${escapeHtml(inverterCapacityText)}` : ''}${inverterQuantity > 0 ? ` | ${inverterQuantity} Nos` : ''}</div>`
+        : '',
+      batteryDetails
+        ? `<div class="main-item-detail">3. Battery: ${escapeHtml(batteryDetails)}${batteryQuantity > 0 ? ` | ${batteryQuantity} Nos` : ''}</div>`
+        : '',
       `<div class="main-item-next-page">Please find detailed BOM &amp; Scope on next page.</div>`,
       subsidyText
         ? `<div class="main-item-subsidy">${escapeHtml(subsidyText)}</div>`

@@ -115,6 +115,8 @@ const EditQuotation = () => {
     panelBrand: '',
     panelWattage: 0,
     panelTechnology: '',
+    inverterBrand: '', inverterCapacity: '', inverterQuantity: 1,
+    batteryBrand: '', batteryType: '', batteryCapacity: '', batteryVoltage: '', batteryQuantity: 1,
     subsidyDescription: 'Subsidy will be credited to your bank account directly.',
     expiryDate: '',
     mainItem: { ...initialMainItem },
@@ -175,6 +177,8 @@ const EditQuotation = () => {
           panelBrand: data.panelBrand || data.mainItem?.panelDetails || '',
           panelWattage: Number(data.panelWattage || 0),
           panelTechnology: data.panelTechnology || '',
+          inverterBrand: data.inverterBrand || data.mainItem?.inverterDetails || '', inverterCapacity: data.inverterCapacity || '', inverterQuantity: data.inverterQuantity ?? 1,
+          batteryBrand: data.batteryBrand || '', batteryType: data.batteryType || '', batteryCapacity: data.batteryCapacity || '', batteryVoltage: data.batteryVoltage || '', batteryQuantity: data.batteryQuantity ?? 1,
           subsidyDescription: data.subsidyDescription || 'Subsidy will be credited to your bank account directly.',
 
           expiryDate: data.expiryDate
@@ -460,6 +464,14 @@ const EditQuotation = () => {
         customerCategory: formData.customerCategory,
         systemType: formData.systemType,
         batteryIncluded: formData.systemType !== 'ON_GRID',
+        inverterBrand: formData.inverterBrand || formData.mainItem.inverterDetails,
+        inverterCapacity: formData.inverterCapacity,
+        inverterQuantity: Number(formData.inverterQuantity) || 0,
+        batteryBrand: formData.systemType === 'ON_GRID' ? '' : formData.batteryBrand,
+        batteryType: formData.systemType === 'ON_GRID' ? '' : formData.batteryType,
+        batteryCapacity: formData.systemType === 'ON_GRID' ? '' : formData.batteryCapacity,
+        batteryVoltage: formData.systemType === 'ON_GRID' ? '' : formData.batteryVoltage,
+        batteryQuantity: formData.systemType === 'ON_GRID' ? 0 : Number(formData.batteryQuantity) || 0,
         panelCount: Number(formData.panelCount),
 
         expiryDate: formData.expiryDate || undefined,
@@ -735,7 +747,17 @@ const EditQuotation = () => {
             <div>
               <label>Panel Technology (Auto)</label>
               <Input name="panelTechnology" value={formData.panelTechnology} disabled={!isEditable} onChange={handleInputChange} />
-            <div><label>Solar Inverter Brand</label><Input name="mainItem.inverterDetails" value={formData.mainItem.inverterDetails || ''} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, mainItem: { ...prev.mainItem, inverterDetails: e.target.value } }))} placeholder="Enter inverter brand / model" /></div>
+            <div><label>Solar Inverter Brand</label><Input value={formData.inverterBrand || formData.mainItem.inverterDetails || ''} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, inverterBrand: e.target.value, mainItem: { ...prev.mainItem, inverterDetails: e.target.value } }))} placeholder="Enter inverter brand / model" /></div>
+            <div><label>Inverter Capacity (kW)</label><Input value={formData.inverterCapacity} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, inverterCapacity: e.target.value }))} placeholder="e.g. 5 kW" /></div>
+            <div><label>Inverter Quantity (Nos)</label><Input type="number" min="0" value={formData.inverterQuantity} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, inverterQuantity: e.target.value }))} /></div>
+            {formData.systemType !== 'ON_GRID' && <>
+              <div style={{ gridColumn: '1 / -1', marginTop: 12, padding: '12px 14px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, fontWeight: 700, color: '#166534' }}>Battery Configuration</div>
+              <div><label>Battery Brand</label><Input value={formData.batteryBrand} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, batteryBrand: e.target.value }))} placeholder="e.g. Exide / Luminous" /></div>
+              <div><label>Battery Type</label><Input value={formData.batteryType} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, batteryType: e.target.value }))} placeholder="Lithium / Tubular / Lead Acid" /></div>
+              <div><label>Battery Capacity (Ah / kWh)</label><Input value={formData.batteryCapacity} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, batteryCapacity: e.target.value }))} placeholder="e.g. 150 Ah or 5 kWh" /></div>
+              <div><label>Battery Voltage</label><Input value={formData.batteryVoltage} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, batteryVoltage: e.target.value }))} placeholder="e.g. 48V" /></div>
+              <div><label>Battery Quantity (Nos)</label><Input type="number" min="0" value={formData.batteryQuantity} disabled={!isEditable} onChange={e => setFormData(prev => ({ ...prev, batteryQuantity: e.target.value }))} /></div>
+            </>}
             </div>
             <div>
               <label>Created By (Editable)</label>

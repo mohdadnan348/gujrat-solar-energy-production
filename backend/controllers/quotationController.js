@@ -40,7 +40,7 @@ const createQuotation = catchAsync(async (req, res) => {
   const { 
     customerId, leadName, plantCapacity, customerCategory, systemType, batteryIncluded, branch, date, expiryDate, 
     mainItem, materialTotalAmount, materialGstRate, gstType, gstMode, perKwAmount, testimonials, subTotal, gstAmount, grandTotal, subsidyAmount, 
-    bom, bomOptions, selectedBomOption, termsAndConditions, panelCount, createdByName, panelBrand, panelWattage, panelTechnology, subsidyDescription, notes
+    bom, bomOptions, selectedBomOption, termsAndConditions, panelCount, createdByName, panelBrand, panelWattage, panelTechnology, subsidyDescription, notes, inverterBrand, inverterCapacity, inverterQuantity, batteryBrand, batteryType, batteryCapacity, batteryVoltage, batteryQuantity
   } = req.body;
 
   const customer = await Customer.findById(customerId);
@@ -92,6 +92,14 @@ const createQuotation = catchAsync(async (req, res) => {
     customerCategory: ['RESIDENTIAL', 'COMMERCIAL', 'INDUSTRIAL'].includes(customerCategory) ? customerCategory : 'RESIDENTIAL',
     systemType: ['ON_GRID', 'OFF_GRID', 'HYBRID'].includes(systemType) ? systemType : 'ON_GRID',
     batteryIncluded: systemType === 'ON_GRID' ? Boolean(batteryIncluded) : true,
+    inverterBrand: inverterBrand || mainItem?.inverterDetails || '',
+    inverterCapacity: inverterCapacity || '',
+    inverterQuantity: Number(inverterQuantity) || 0,
+    batteryBrand: systemType === 'ON_GRID' ? '' : (batteryBrand || ''),
+    batteryType: systemType === 'ON_GRID' ? '' : (batteryType || ''),
+    batteryCapacity: systemType === 'ON_GRID' ? '' : (batteryCapacity || ''),
+    batteryVoltage: systemType === 'ON_GRID' ? '' : (batteryVoltage || ''),
+    batteryQuantity: systemType === 'ON_GRID' ? 0 : (Number(batteryQuantity) || 0),
     branch: branch || 'HEAD_OFFICE',
     date: date || Date.now(),
     expiryDate,
@@ -197,7 +205,13 @@ const updateQuotation = catchAsync(async (req, res) => {
   if (req.body.materialTotalAmount !== undefined && Number(req.body.materialTotalAmount) <= 0) return res.status(400).json(new ApiResponse(400, null, 'Quotation amount must be entered manually'));
   if (req.body.customerCategory !== undefined) quotation.customerCategory = req.body.customerCategory;
   if (req.body.systemType !== undefined) quotation.systemType = req.body.systemType;
-  if (req.body.systemType !== undefined) quotation.batteryIncluded = req.body.systemType !== 'ON_GRID';
+  if (req.body.systemType !== undefined) {
+    quotation.batteryIncluded = req.body.systemType !== 'ON_GRID';
+    if (req.body.systemType === 'ON_GRID') {
+      ['batteryBrand', 'batteryType', 'batteryCapacity', 'batteryVoltage'].forEach(key => { req.body[key] = ''; });
+      req.body.batteryQuantity = 0;
+    }
+  }
   if ((req.body.customerCategory ?? quotation.customerCategory) !== 'RESIDENTIAL' || (req.body.systemType ?? quotation.systemType) === 'OFF_GRID') req.body.subsidyAmount = '';
 
   const amountChanged = req.body.materialTotalAmount !== undefined || req.body.materialGstRate !== undefined || req.body.gstType !== undefined || req.body.gstMode !== undefined;
@@ -251,7 +265,7 @@ const updateQuotation = catchAsync(async (req, res) => {
   if (req.body.bomOptions) req.body.bomOptions = req.body.bomOptions.map(option => ({ optionId: option.optionId || option.name, name: option.name || 'BOM Option', items: normalizeBom(option.items) }));
 
   const allowedUpdates = [
-    'leadName', 'createdByName', 'panelBrand', 'panelWattage', 'panelTechnology', 'subsidyDescription', 'notes', 'bomOptions', 'selectedBomOption', 'plantCapacity', 'customerCategory', 'systemType', 'batteryIncluded', 'branch', 'expiryDate', 'mainItem', 
+    'leadName', 'createdByName', 'panelBrand', 'panelWattage', 'panelTechnology', 'inverterBrand', 'inverterCapacity', 'inverterQuantity', 'batteryBrand', 'batteryType', 'batteryCapacity', 'batteryVoltage', 'batteryQuantity', 'subsidyDescription', 'notes', 'bomOptions', 'selectedBomOption', 'plantCapacity', 'customerCategory', 'systemType', 'batteryIncluded', 'branch', 'expiryDate', 'mainItem', 
     'materialTotalAmount', 'perKwAmount', 'materialGstRate', 'gstType', 'gstMode', 'testimonials', 'cgstAmount', 'sgstAmount', 'igstAmount', 'subTotal', 'gstAmount', 'grandTotal', 'subsidyAmount', 
     'panelCount', 'roofImageUrl', 'bom', 'termsAndConditions', 'amountInWords'
   ];
